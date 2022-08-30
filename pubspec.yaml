@@ -1,0 +1,132 @@
+name: dating_app
+description: Flutter Dating App
+
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+version: 1.0.7+7
+
+environment:
+  sdk: ">=2.16.0 <3.0.0"
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons:
+
+  # FIREBASE Packages Section
+  firebase_core: 1.20.0 # Firebase Core package required to use other firebase services
+  firebase_auth: 3.5.1  # Used to Authenticate User Account (e.g. Sign in with Phone number, etc..)
+  cloud_firestore: 3.4.1 # Used to Save User Data in Database
+  firebase_messaging: 12.0.1 # Used to Send Push Notifications (e.g. New like, Visit and Message)
+  firebase_storage: 10.3.3 # Used to Save User Profile Images on Cloud Storage    
+  google_mobile_ads: 1.3.0 # Used to Show Admob Ads in App (e.g. Banner Ads, Interstitial Ads (full screen), Native Ads and Rewarded Video Ads)
+  # END 
+
+  in_app_purchase: 0.5.2 # This plugin help us to Sell VIP Subscription Plans in app
+  flutter_svg: 1.1.1+1 # This plugin help us to use custom svg icons          
+  flutter_launcher_icons: 0.9.3 # Used to generate app icon launcher for both platforms android and iOS 
+  flutter_native_splash: 2.2.6 # Used to generate the app splash screen for both platforms android and iOS 
+  country_code_picker: 2.0.2 # Used to Select User Country Code
+  scoped_model: 2.0.0-nullsafety.0 # Used to Manage Application State
+  image_picker: 0.8.5+3 # # Used to select images from the User's device image library or take a new photo using the camera
+  image_cropper: 2.0.3 # Used to Crop/Rotate Selected images from user's device
+  url_launcher: 6.1.5 # Used to open link schemes in application or browser
+  geolocator: 9.0.1 # Used to get User location by GPS 
+  geocoding: 2.0.4 # Used to translate User latitude and longitude coordinates into a readable address
+  geoflutterfire: 3.0.3 # This plugin help us to query users by geolocation center
+  shimmer: 2.0.0 # Used to create placeholder widget while app is loading the image
+  timeago: 3.2.2 # Used to create fuzzy timestamps: (e.g. "3 minutes ago")
+  share: 2.0.4 # Used to share application content in other applications
+  flutter_cupertino_datetime_picker: 3.0.0
+  place_picker: 0.9.20-nullsafety # This plugin help us to create Passport feature
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^1.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+     - assets/images/
+     - assets/icons/
+     - assets/lang/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/assets-and-images/#resolution-aware.
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/assets-and-images/#from-packages
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/custom-fonts/#from-packages
+
+# Generate launcher icons settings  
+flutter_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/app_logo.png"
+
+# Generate app logo for splash screen
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/images/app_logo.png"
+  android: true
+  ios: true   
