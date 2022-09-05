@@ -9,10 +9,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:jupiter_aggregator/jupiter_aggregator.dart';
 import 'package:solana/base58.dart';
 import 'package:solana/dto.dart';
+import 'package:solana/metaplex.dart';
 import 'package:solana/solana.dart';
 import 'package:solana/solana_pay.dart';
 
 import 'api.dart';
+
+class AddressNames {
+  static final names = {
+    'USDT': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+  };
+
+  static String? getAddressByName(String name) {
+    return names[name];
+  }
+
+  static String? getNameByAddress(String address) {
+    return names.entries.firstWhere((element) => element.value == address).key;
+  }
+}
 
 class SolanaDeFiSDK {
   static const int lamportsPerSol = 1000000000;
@@ -23,17 +38,32 @@ class SolanaDeFiSDK {
 
   static late SolanaClient _client;
 
-  /// create devnet client by default
+  /// create mainnet(https://api.mainnet-beta.solana.com) solana client by default
+  ///
+  /// devnet - https://api.devnet.solana.com
   static void initialize([SolanaClient? solanaClient]) {
     _client = solanaClient ??
         SolanaClient(
-          rpcUrl: Uri.parse('https://api.devnet.solana.com'),
-          websocketUrl: Uri.parse('wss://api.devnet.solana.com'),
-        );
+            rpcUrl: Uri.parse('https://api.mainnet-beta.solana.com'),
+            websocketUrl: Uri.parse('wss://api.mainnet-beta.solana.com'));
   }
 
   static SolanaClient get client => _client;
   static JupiterAggregatorClient get jup => _jupClient;
+
+  static Future<String?> getNameOfAddress(String address) async {
+    final name = AddressNames.getNameByAddress(address);
+    if (name != null) return name;
+
+    final metadata = await SolanaDeFiSDK.client.rpcClient
+        .getMetadata(mint: Ed25519HDPublicKey.fromBase58(address));
+    if (metadata?.name != null) {
+      debugPrint('add name ${metadata!.name}/$address to cache.');
+      AddressNames.names[metadata.name] = address;
+      return metadata.name;
+    }
+    return null;
+  }
 
   static Future<int> getAvailableTransferLamports(String address) async {
     final fees = await _client.rpcClient.getFees();
@@ -46,6 +76,52 @@ class SolanaDeFiSDK {
   static Future<int> getBalance(String address) async {
     return await _client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
+  }
+
+  static Future<List<TokenAccountData>> getTokenAccounts(String address) async {
+    final accounts =
+        await SolanaDeFiSDK.client.rpcClient.getTokenAccountsByOwner(
+      address,
+      const TokenAccountsFilter.byProgramId(TokenProgram.programId),
+      encoding: Encoding.jsonParsed,
+      commitment: Commitment.confirmed,
+    );
+    final filtered = accounts.where((element) {
+      final data = element.account.data as ParsedSplTokenProgramAccountData;
+      final parsed = data.parsed as TokenAccountData;
+      return parsed.info.tokenAmount.decimals != 0 &&
+          num.parse(parsed.info.tokenAmount.amount) >
+              0; // && parsed.info.tokenAmount.amount;
+    });
+    // print(filtered.length);
+    for (final element in filtered) {
+      final data = element.account.data as ParsedAccountData;
+      final programData = data as ParsedSplTokenProgramAccountData;
+      final parsed = programData.parsed as TokenAccountData;
+      final mint = parsed.info.mint;
+      final amount = parsed.info.tokenAmount.uiAmountString;
+      final isNft = parsed.info.tokenAmount.decimals == 0;
+      debugPrint('--> mint:$mint isNft:$isNft amount:$amount');
+    }
+    return filtered
+        .map((element) =>
+            (element.account.data as ParsedSplTokenProgramAccountData).parsed
+                as TokenAccountData)
+        .toList(growable: false);
+  }
+
+  static Future<TokenAccountData> getUSDTTokenAccount(String address) async {
+    final response = await _client.rpcClient.getTokenAccountsByOwner(
+      address,
+      const TokenAccountsFilterByMint(
+          'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'),
+      encoding: Encoding.jsonParsed,
+      commitment: Commitment.confirmed,
+    );
+    debugPrint('length is ${response.length}');
+    final data = response.first.account.data as ParsedAccountData;
+    final programData = data as ParsedSplTokenProgramAccountData;
+    return programData.parsed as TokenAccountData;
   }
 
   static String uiAmount(int lamports) =>
@@ -98,7 +174,6 @@ class SolanaDeFiSDK {
 
   static Future<Wallet> initializeWalletFromMnemonic(String mnemonic) async {
     // String mnemonic = generateMnemonic();
-    debugPrint('mnemonic is "$mnemonic"');
     /*
     List<int> seed = bip39.mnemonicToSeed(mnemonic);
     debugPrint('seed is $seed');
