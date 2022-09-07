@@ -15,6 +15,7 @@ import 'package:solana/solana_pay.dart';
 
 import 'api.dart';
 
+/// address name and label mapping for mainnet
 class AddressNames {
   static final names = {
     'USDT': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
@@ -29,33 +30,73 @@ class AddressNames {
   }
 }
 
+enum ClusterEnvironment { mainnet, devnet, testnet }
+
 class SolanaDeFiSDK {
   static const int lamportsPerSol = 1000000000;
   static const int solDecimalPlaces = 9;
+
+  static ClusterEnvironment? _env;
   // static final httpClient = http.Client();
   static final JupiterAggregatorClient _jupClient = JupiterAggregatorClient();
   static final _rest = RestClient(Dio());
 
-  static late SolanaClient _client;
+  SolanaClient? _client;
+  SolanaClient get client => _client!;
+  JupiterAggregatorClient get jup => _jupClient;
+
+  static final SolanaDeFiSDK _instance = SolanaDeFiSDK._();
+  static SolanaDeFiSDK get instance => _instance;
+
+  // factory SolanaDeFiSDK() => _instance!;
+  SolanaDeFiSDK._();
 
   /// create mainnet(https://api.mainnet-beta.solana.com) solana client by default
   ///
   /// devnet - https://api.devnet.solana.com
-  static void initialize([SolanaClient? solanaClient]) {
-    _client = solanaClient ??
-        SolanaClient(
-            rpcUrl: Uri.parse('https://api.mainnet-beta.solana.com'),
-            websocketUrl: Uri.parse('wss://api.mainnet-beta.solana.com'));
+  /// testnet - https://api.testnet.solana.com
+  static SolanaDeFiSDK initialize({
+    ClusterEnvironment? env,
+    SolanaClient? solanaClient,
+  }) {
+    SolanaClient client;
+    assert(!(env != null && solanaClient != null));
+    _env = env;
+    if (solanaClient != null) {
+      client = solanaClient;
+    } else {
+      switch (env) {
+        case ClusterEnvironment.devnet:
+          client = SolanaClient(
+              rpcUrl: Uri.parse('https://api.devnet.solana.com'),
+              websocketUrl: Uri.parse('wss://api.devnet.solana.com'));
+          break;
+        case ClusterEnvironment.testnet:
+          client = SolanaClient(
+              rpcUrl: Uri.parse('https://api.testnet.solana.com'),
+              websocketUrl: Uri.parse('wss://api.testnet.solana.com'));
+          break;
+        default:
+          client = SolanaClient(
+              rpcUrl: Uri.parse('https://api.mainnet-beta.solana.com'),
+              websocketUrl: Uri.parse('wss://api.mainnet-beta.solana.com'));
+      }
+    }
+    instance._client = client;
+    // if (_instance == null) {
+    //   _instance = SolanaDeFiSDK._(client);
+    // } else {
+    //   _client = client;
+    // }
+    // return _instance!;
+    return instance;
   }
 
-  static SolanaClient get client => _client;
-  static JupiterAggregatorClient get jup => _jupClient;
-
-  static Future<String?> getNameOfAddress(String address) async {
+  Future<String?> getNameOfAddress(String address) async {
     final name = AddressNames.getNameByAddress(address);
     if (name != null) return name;
 
-    final metadata = await SolanaDeFiSDK.client.rpcClient
+    final metadata = await client.rpcClient
         .getMetadata(mint: Ed25519HDPublicKey.fromBase58(address));
     if (metadata?.name != null) {
       debugPrint('add name ${metadata!.name}/$address to cache.');
@@ -65,22 +106,22 @@ class SolanaDeFiSDK {
     return null;
   }
 
-  static Future<int> getAvailableTransferLamports(String address) async {
-    final fees = await _client.rpcClient.getFees();
+  Future<int> getAvailableTransferLamports(String address) async {
+    final fees = await client.rpcClient.getFees();
     final balance = await getBalance(address);
     final fee = fees.feeCalculator.lamportsPerSignature;
     debugPrint('[sdk] balance is $balance, transfer fee is $fee');
     return balance > fee ? balance - fee : 0;
   }
 
-  static Future<int> getBalance(String address) async {
-    return await _client.rpcClient
+  Future<int> getBalance(String address) async {
+    debugPrint('[${_env ?? ClusterEnvironment.mainnet}](getBalance) $address');
+    return await client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
   }
 
-  static Future<List<TokenAccountData>> getTokenAccounts(String address) async {
-    final accounts =
-        await SolanaDeFiSDK.client.rpcClient.getTokenAccountsByOwner(
+  Future<List<TokenAccountData>> getTokenAccounts(String address) async {
+    final accounts = await client.rpcClient.getTokenAccountsByOwner(
       address,
       const TokenAccountsFilter.byProgramId(TokenProgram.programId),
       encoding: Encoding.jsonParsed,
@@ -110,8 +151,9 @@ class SolanaDeFiSDK {
         .toList(growable: false);
   }
 
-  static Future<TokenAccountData> getUSDTTokenAccount(String address) async {
-    final response = await _client.rpcClient.getTokenAccountsByOwner(
+  /// get usdt for mainnet only
+  Future<TokenAccountData> getUSDTTokenAccount(String address) async {
+    final response = await client.rpcClient.getTokenAccountsByOwner(
       address,
       const TokenAccountsFilterByMint(
           'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'),
@@ -124,10 +166,10 @@ class SolanaDeFiSDK {
     return programData.parsed as TokenAccountData;
   }
 
-  static String uiAmount(int lamports) =>
+  String uiAmount(int lamports) =>
       (lamports / lamportsPerSol).toStringAsFixed(solDecimalPlaces);
 
-  static Future<String> transfer(
+  Future<String> transfer(
       Wallet source, String destinationAddress, int amount) async {
     debugPrint(
         '[sdk] transfer ${uiAmount(amount)} from "${source.address}" to "$destinationAddress"');
@@ -145,7 +187,7 @@ class SolanaDeFiSDK {
     return transactionId;
   }
 
-  static SolanaPayRequest createPayRequest(
+  SolanaPayRequest createPayRequest(
     String recipientAddress,
     String amount, {
     String? label,
@@ -162,17 +204,17 @@ class SolanaDeFiSDK {
     );
   }
 
-  static Future<String> getPrivateKey(Wallet wallet) async {
+  Future<String> getPrivateKey(Wallet wallet) async {
     List<int> key = (await wallet.extract()).bytes;
     key += wallet.publicKey.bytes;
     return base58encode(key);
   }
 
-  static String generateMnemonic() {
+  String generateMnemonic() {
     return bip39.generateMnemonic();
   }
 
-  static Future<Wallet> initializeWalletFromMnemonic(String mnemonic) async {
+  Future<Wallet> initializeWalletFromMnemonic(String mnemonic) async {
     // String mnemonic = generateMnemonic();
     /*
     List<int> seed = bip39.mnemonicToSeed(mnemonic);
@@ -192,7 +234,7 @@ class SolanaDeFiSDK {
     return wallet;
   }
 
-  static Future<Wallet> initializeWalletFromPrivateKey(String key) async {
+  Future<Wallet> initializeWalletFromPrivateKey(String key) async {
     List<int>? decodedKey;
     try {
       decodedKey = base58decode(key);
@@ -210,7 +252,8 @@ class SolanaDeFiSDK {
     return await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: privateKey);
   }
 
-  static Future<NftScanGetTransactionResponse> getNfts(String address,
+  /// get nfts on mainnet
+  Future<NftScanGetTransactionResponse> getNfts(String address,
       {pageIndex = 0, pageSize = 20}) async {
     final response = await _rest.getTransactionByUserAddress(
         userAddress: address, pageIndex: pageIndex, pageSize: pageSize);
