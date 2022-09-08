@@ -6,6 +6,7 @@ import 'package:bip39/bip39.dart' as bip39;
 import 'package:decimal/decimal.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jupiter_aggregator/jupiter_aggregator.dart';
 import 'package:solana/base58.dart';
 import 'package:solana/dto.dart';
@@ -31,6 +32,19 @@ class AddressNames {
 }
 
 enum ClusterEnvironment { mainnet, devnet, testnet }
+
+class KeyManager {
+  /// using flutter secure storage store mnemonic
+  ///
+  /// TODO
+  static Future<void> persistMnemonic(String mnemonic) {
+    return const FlutterSecureStorage().write(key: "mnemonic", value: mnemonic);
+  }
+
+  static Future<String?> restoreMnemonic() {
+    return const FlutterSecureStorage().read(key: 'mnemonic');
+  }
+}
 
 class SolanaDeFiSDK {
   static const int lamportsPerSol = 1000000000;
@@ -83,12 +97,6 @@ class SolanaDeFiSDK {
       }
     }
     instance._client = client;
-    // if (_instance == null) {
-    //   _instance = SolanaDeFiSDK._(client);
-    // } else {
-    //   _client = client;
-    // }
-    // return _instance!;
     return instance;
   }
 

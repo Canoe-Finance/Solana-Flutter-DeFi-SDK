@@ -13,6 +13,7 @@ dependencies:
   solana: ^0.26.0
   jupiter_aggregator: ^1.0.0
   retrofit: '>=3.0.0 <4.0.0'
+  flutter_secure_storage: ^6.0.0
   logger: any # for logging purpose
 
 dev_dependencies:
