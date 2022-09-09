@@ -6,6 +6,175 @@ part of 'api.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+SwapDTO _$SwapDTOFromJson(Map<String, dynamic> json) => SwapDTO(
+      route: JupRoute.fromJson(json['route'] as Map<String, dynamic>),
+      userPublicKey: json['userPublicKey'] as String,
+      wrapUnwrapSOL: json['wrapUnwrapSOL'] as bool?,
+      feeAccount: json['feeAccount'] as String?,
+      tokenLedger: json['tokenLedger'] as String?,
+      destinationWallet: json['destinationWallet'] as String?,
+    );
+
+Map<String, dynamic> _$SwapDTOToJson(SwapDTO instance) => <String, dynamic>{
+      'route': instance.route,
+      'userPublicKey': instance.userPublicKey,
+      'wrapUnwrapSOL': instance.wrapUnwrapSOL,
+      'feeAccount': instance.feeAccount,
+      'tokenLedger': instance.tokenLedger,
+      'destinationWallet': instance.destinationWallet,
+    };
+
+JupSwapTransactions _$JupSwapTransactionsFromJson(Map<String, dynamic> json) =>
+    JupSwapTransactions(
+      setupTransaction: json['setupTransaction'] as String?,
+      swapTransaction: json['swapTransaction'] as String,
+      cleanupTransaction: json['cleanupTransaction'] as String?,
+    );
+
+Map<String, dynamic> _$JupSwapTransactionsToJson(
+        JupSwapTransactions instance) =>
+    <String, dynamic>{
+      'setupTransaction': instance.setupTransaction,
+      'swapTransaction': instance.swapTransaction,
+      'cleanupTransaction': instance.cleanupTransaction,
+    };
+
+JupResponse<T> _$JupResponseFromJson<T>(
+  Map<String, dynamic> json,
+  T Function(Object? json) fromJsonT,
+) =>
+    JupResponse<T>(
+      timeTaken: json['timeTaken'] as num?,
+      contextSlot: json['contextSlot'] as String?,
+      data: _$nullableGenericFromJson(json['data'], fromJsonT),
+    );
+
+Map<String, dynamic> _$JupResponseToJson<T>(
+  JupResponse<T> instance,
+  Object? Function(T value) toJsonT,
+) =>
+    <String, dynamic>{
+      'timeTaken': instance.timeTaken,
+      'contextSlot': instance.contextSlot,
+      'data': _$nullableGenericToJson(instance.data, toJsonT),
+    };
+
+T? _$nullableGenericFromJson<T>(
+  Object? input,
+  T Function(Object? json) fromJson,
+) =>
+    input == null ? null : fromJson(input);
+
+Object? _$nullableGenericToJson<T>(
+  T? input,
+  Object? Function(T value) toJson,
+) =>
+    input == null ? null : toJson(input);
+
+JupRoute _$JupRouteFromJson(Map<String, dynamic> json) => JupRoute(
+      inAmount: json['inAmount'] as int,
+      outAmount: json['outAmount'] as int,
+      priceImpactPct: (json['priceImpactPct'] as num?)?.toDouble(),
+      marketInfos: (json['marketInfos'] as List<dynamic>)
+          .map((e) => JupMarketInfo.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      outAmountWithSlippage: json['outAmountWithSlippage'] as int,
+      otherAmountThreshold: json['otherAmountThreshold'] as int,
+      swapMode: json['swapMode'] as String,
+      fees: (json['fees'] as List<dynamic>?)
+          ?.map((e) => JupRouteFee.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$JupRouteToJson(JupRoute instance) => <String, dynamic>{
+      'inAmount': instance.inAmount,
+      'outAmount': instance.outAmount,
+      'priceImpactPct': instance.priceImpactPct,
+      'marketInfos': instance.marketInfos,
+      'outAmountWithSlippage': instance.outAmountWithSlippage,
+      'otherAmountThreshold': instance.otherAmountThreshold,
+      'swapMode': instance.swapMode,
+      'fees': instance.fees,
+    };
+
+JupMarketInfo _$JupMarketInfoFromJson(Map<String, dynamic> json) =>
+    JupMarketInfo(
+      id: json['id'] as String,
+      label: json['label'] as String,
+      inputMint: json['inputMint'] as String,
+      outputMint: json['outputMint'] as String,
+      notEnoughLiquidity: json['notEnoughLiquidity'] as bool,
+      inAmount: json['inAmount'] as int,
+      outAmount: json['outAmount'] as int,
+      priceImpactPct: json['priceImpactPct'] as num?,
+      lpFee: JupFee.fromJson(json['lpFee'] as Map<String, dynamic>),
+      platformFee: JupFee.fromJson(json['platformFee'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$JupMarketInfoToJson(JupMarketInfo instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'label': instance.label,
+      'inputMint': instance.inputMint,
+      'outputMint': instance.outputMint,
+      'notEnoughLiquidity': instance.notEnoughLiquidity,
+      'inAmount': instance.inAmount,
+      'outAmount': instance.outAmount,
+      'priceImpactPct': instance.priceImpactPct,
+      'lpFee': instance.lpFee,
+      'platformFee': instance.platformFee,
+    };
+
+JupFee _$JupFeeFromJson(Map<String, dynamic> json) => JupFee(
+      amount: json['amount'] as num,
+      mint: json['mint'] as String,
+      pct: json['pct'] as num?,
+    );
+
+Map<String, dynamic> _$JupFeeToJson(JupFee instance) => <String, dynamic>{
+      'amount': instance.amount,
+      'mint': instance.mint,
+      'pct': instance.pct,
+    };
+
+JupRouteFee _$JupRouteFeeFromJson(Map<String, dynamic> json) => JupRouteFee(
+      signatureFee: json['signatureFee'] as num,
+      openOrdersDeposits: (json['openOrdersDeposits'] as List<dynamic>)
+          .map((e) => e as num)
+          .toList(),
+      ataDeposits:
+          (json['ataDeposits'] as List<dynamic>).map((e) => e as num).toList(),
+      totalFeeAndDeposits: json['totalFeeAndDeposits'] as num,
+      minimumSOLForTransaction: json['minimumSOLForTransaction'] as num,
+    );
+
+Map<String, dynamic> _$JupRouteFeeToJson(JupRouteFee instance) =>
+    <String, dynamic>{
+      'signatureFee': instance.signatureFee,
+      'openOrdersDeposits': instance.openOrdersDeposits,
+      'ataDeposits': instance.ataDeposits,
+      'totalFeeAndDeposits': instance.totalFeeAndDeposits,
+      'minimumSOLForTransaction': instance.minimumSOLForTransaction,
+    };
+
+JupGetPriceData _$JupGetPriceDataFromJson(Map<String, dynamic> json) =>
+    JupGetPriceData(
+      id: json['id'] as String?,
+      mintSymbol: json['mintSymbol'] as String?,
+      vsToken: json['vsToken'] as String?,
+      vsTokenSymbol: json['vsTokenSymbol'] as String?,
+      price: json['price'] as num?,
+    );
+
+Map<String, dynamic> _$JupGetPriceDataToJson(JupGetPriceData instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'mintSymbol': instance.mintSymbol,
+      'vsToken': instance.vsToken,
+      'vsTokenSymbol': instance.vsTokenSymbol,
+      'price': instance.price,
+    };
+
 NftScanGetTransactionResponse _$NftScanGetTransactionResponseFromJson(
         Map<String, dynamic> json) =>
     NftScanGetTransactionResponse(
@@ -93,8 +262,8 @@ Map<String, dynamic> _$NftTransactionRecordToJson(
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers
 
-class _RestClient implements RestClient {
-  _RestClient(this._dio, {this.baseUrl});
+class _ApiClient implements ApiClient {
+  _ApiClient(this._dio, {this.baseUrl});
 
   final Dio _dio;
 
@@ -126,6 +295,76 @@ class _RestClient implements RestClient {
             queryParameters: queryParameters, data: _data)
         .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = NftScanGetTransactionResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<String> jupGetPrice({required id, vsToken, amount}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'id': id,
+      r'vsToken': vsToken,
+      r'amount': amount
+    };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<String>(_setStreamType<String>(
+        Options(method: 'GET', headers: _headers, extra: _extra)
+            .compose(_dio.options, 'https://quote-api.jup.ag/v1/price',
+                queryParameters: queryParameters, data: _data)
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = _result.data!;
+    return value;
+  }
+
+  @override
+  Future<String> jupGetQuote(
+      {required inputMint,
+      required outputMint,
+      required amount,
+      swapMode,
+      slippage,
+      feeBps,
+      onlyDirectRoutes,
+      userPublicKey}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'inputMint': inputMint,
+      r'outputMint': outputMint,
+      r'amount': amount,
+      r'swapMode': swapMode,
+      r'slippage': slippage,
+      r'feeBps': feeBps,
+      r'onlyDirectRoutes': onlyDirectRoutes,
+      r'userPublicKey': userPublicKey
+    };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<String>(_setStreamType<String>(
+        Options(method: 'GET', headers: _headers, extra: _extra)
+            .compose(_dio.options, 'https://quote-api.jup.ag/v1/quote',
+                queryParameters: queryParameters, data: _data)
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = _result.data!;
+    return value;
+  }
+
+  @override
+  Future<JupSwapTransactions> jupPostSwap(dto) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(dto.toJson());
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<JupSwapTransactions>(
+            Options(method: 'POST', headers: _headers, extra: _extra)
+                .compose(_dio.options, 'https://quote-api.jup.ag/v1/swap',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = JupSwapTransactions.fromJson(_result.data!);
     return value;
   }
 

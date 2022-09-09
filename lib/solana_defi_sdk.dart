@@ -1,8 +1,10 @@
 library solana_defi_sdk;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:bip39/bip39.dart' as bip39;
+import 'package:collection/collection.dart';
 import 'package:decimal/decimal.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jupiter_aggregator/jupiter_aggregator.dart';
 import 'package:solana/base58.dart';
 import 'package:solana/dto.dart';
+import 'package:solana/encoder.dart';
 import 'package:solana/metaplex.dart';
 import 'package:solana/solana.dart';
 import 'package:solana/solana_pay.dart';
@@ -17,17 +20,21 @@ import 'package:solana/solana_pay.dart';
 import 'api.dart';
 
 /// address name and label mapping for mainnet
-class AddressNames {
-  static final names = {
+class TokenSymbols {
+  static final data = {
+    'SOL': 'So11111111111111111111111111111111111111112',
     'USDT': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+    'USDC': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   };
 
-  static String? getAddressByName(String name) {
-    return names[name];
+  static String? getAddress(String symbol) {
+    return data[symbol];
   }
 
-  static String? getNameByAddress(String address) {
-    return names.entries.firstWhere((element) => element.value == address).key;
+  static String? getSymbol(String address) {
+    return data.entries
+        .firstWhereOrNull((element) => element.value == address)
+        ?.key;
   }
 }
 
@@ -53,7 +60,7 @@ class SolanaDeFiSDK {
   static ClusterEnvironment? _env;
   // static final httpClient = http.Client();
   static final JupiterAggregatorClient _jupClient = JupiterAggregatorClient();
-  static final _rest = RestClient(Dio());
+  static final _api = ApiClient(Dio());
 
   SolanaClient? _client;
   SolanaClient get client => _client!;
@@ -101,14 +108,14 @@ class SolanaDeFiSDK {
   }
 
   Future<String?> getNameOfAddress(String address) async {
-    final name = AddressNames.getNameByAddress(address);
+    final name = TokenSymbols.getSymbol(address);
     if (name != null) return name;
 
     final metadata = await client.rpcClient
         .getMetadata(mint: Ed25519HDPublicKey.fromBase58(address));
     if (metadata?.name != null) {
       debugPrint('add name ${metadata!.name}/$address to cache.');
-      AddressNames.names[metadata.name] = address;
+      TokenSymbols.data[metadata.name] = address;
       return metadata.name;
     }
     return null;
@@ -180,7 +187,7 @@ class SolanaDeFiSDK {
   Future<String> transfer(
       Wallet source, String destinationAddress, int amount) async {
     debugPrint(
-        '[sdk] transfer ${uiAmount(amount)} from "${source.address}" to "$destinationAddress"');
+        '[sdk] transfer ${uiAmount(amount)}($amount) from "${source.address}" to "$destinationAddress"');
     // final source = Ed25519HDPublicKey.fromBase58(sourceAddress);
     final destination = Ed25519HDPublicKey.fromBase58(destinationAddress);
     final instruction = SystemInstruction.transfer(
@@ -260,10 +267,77 @@ class SolanaDeFiSDK {
     return await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: privateKey);
   }
 
+  /// get simple price for swap
+  ///
+  /// input - sol or So11111111111111111111111111111111111111112
+  /// output - usdt or Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB
+  Future<JupGetPriceData?> getSwapPrice(
+      String input, String output, num amount) async {
+    final response =
+        await _api.jupGetPrice(id: input, vsToken: output, amount: amount);
+    return JupResponse<JupGetPriceData>.fromJson(jsonDecode(response),
+        (json) => JupGetPriceData.fromJson(json as dynamic)).data;
+  }
+
+  Future<List<JupRoute?>?> getSwapQuote(
+    String inputMint,
+    String outputMint,
+    int amount, {
+    num? slippage,
+
+    /// Fee BPS (only pass in if you want to charge a fee on this swap)
+    int? feeBps,
+  }) async {
+    final response = await _api.jupGetQuote(
+        inputMint: inputMint,
+        outputMint: outputMint,
+        amount: amount,
+        feeBps: feeBps,
+        slippage: slippage);
+    return JupResponse<List<JupRoute?>>.fromJson(
+        jsonDecode(response),
+        (routes) => (routes as List<dynamic>)
+            .map((json) => JupRoute.fromJson(json as dynamic))
+            .toList(growable: false)).data;
+  }
+
+  /// https://docs.jup.ag/jupiter-api/swap-api-for-solana
+  ///
+  /// Send a route to jupiter to generate transactions
+  Future<JupSwapTransactions> getSwapTxs(
+    String publicKey,
+    JupRoute route, {
+
+    /// Fee token account for the output token (only pass in if you set a *feeBps*)
+    String? feeAccount,
+  }) async {
+    final response = await _api.jupPostSwap(SwapDTO(
+        route: route, userPublicKey: publicKey, feeAccount: feeAccount));
+    return response;
+  }
+
+  Future<void> swap(Wallet wallet, JupSwapTransactions transactions) async {
+    List<Uint8List> txs = [
+      transactions.setupTransaction,
+      transactions.swapTransaction,
+      transactions.cleanupTransaction
+    ].whereNotNull().map(base64Decode).map((t) => t.sublist(65)).toList();
+    for (var tx in txs) {
+      final recent = await client.rpcClient.getRecentBlockhash();
+      final message = Message.decompile(CompiledMessage(ByteArray(tx)));
+      final signed = await wallet.signMessage(
+          message: message, recentBlockhash: recent.blockhash);
+      final transactionId =
+          await client.rpcClient.sendTransaction(signed.encode());
+      await client.waitForSignatureStatus(transactionId,
+          status: Commitment.confirmed, timeout: const Duration(seconds: 30));
+    }
+  }
+
   /// get nfts on mainnet
   Future<NftScanGetTransactionResponse> getNfts(String address,
       {pageIndex = 0, pageSize = 20}) async {
-    final response = await _rest.getTransactionByUserAddress(
+    final response = await _api.getTransactionByUserAddress(
         userAddress: address, pageIndex: pageIndex, pageSize: pageSize);
     debugPrint('found ${response.data?.total} nfts');
     return response;
