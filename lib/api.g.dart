@@ -6,6 +6,74 @@ part of 'api.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+WormHoleDTO _$WormHoleDTOFromJson(Map<String, dynamic> json) => WormHoleDTO(
+      userPublicKey: json['userPublicKey'] as String,
+      mint: json['mint'] as String,
+      targetAddress: json['targetAddress'] as String,
+      amount: json['amount'] as String,
+    );
+
+Map<String, dynamic> _$WormHoleDTOToJson(WormHoleDTO instance) =>
+    <String, dynamic>{
+      'userPublicKey': instance.userPublicKey,
+      'mint': instance.mint,
+      'targetAddress': instance.targetAddress,
+      'amount': instance.amount,
+    };
+
+WormHoleVO _$WormHoleVOFromJson(Map<String, dynamic> json) => WormHoleVO(
+      json['recentBlockhash'] as String,
+      json['feePayer'] as String,
+      json['nonceInfo'] as String?,
+      (json['signers'] as List<dynamic>).map((e) => e as String).toList(),
+      (json['instructions'] as List<dynamic>)
+          .map((e) => WormHoleInstruction.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$WormHoleVOToJson(WormHoleVO instance) =>
+    <String, dynamic>{
+      'recentBlockhash': instance.recentBlockhash,
+      'feePayer': instance.feePayer,
+      'nonceInfo': instance.nonceInfo,
+      'signers': instance.signers,
+      'instructions': instance.instructions,
+    };
+
+WormHoleInstruction _$WormHoleInstructionFromJson(Map<String, dynamic> json) =>
+    WormHoleInstruction(
+      (json['keys'] as List<dynamic>)
+          .map(
+              (e) => WormHoleInstructionKey.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      json['programId'] as String,
+      (json['data'] as List<dynamic>).map((e) => e as int).toList(),
+    );
+
+Map<String, dynamic> _$WormHoleInstructionToJson(
+        WormHoleInstruction instance) =>
+    <String, dynamic>{
+      'keys': instance.keys,
+      'programId': instance.programId,
+      'data': instance.data,
+    };
+
+WormHoleInstructionKey _$WormHoleInstructionKeyFromJson(
+        Map<String, dynamic> json) =>
+    WormHoleInstructionKey(
+      json['pubKey'] as String,
+      json['isSigner'] as bool,
+      json['isWritable'] as bool,
+    );
+
+Map<String, dynamic> _$WormHoleInstructionKeyToJson(
+        WormHoleInstructionKey instance) =>
+    <String, dynamic>{
+      'pubKey': instance.pubKey,
+      'isSigner': instance.isSigner,
+      'isWritable': instance.isWritable,
+    };
+
 SwapDTO _$SwapDTOFromJson(Map<String, dynamic> json) => SwapDTO(
       route: JupRoute.fromJson(json['route'] as Map<String, dynamic>),
       userPublicKey: json['userPublicKey'] as String,
@@ -365,6 +433,27 @@ class _ApiClient implements ApiClient {
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = JupSwapTransactions.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<WormHoleVO> wormhole(dto) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    _data.addAll(dto.toJson());
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<WormHoleVO>(Options(
+                method: 'POST',
+                headers: _headers,
+                extra: _extra,
+                contentType: 'application/json')
+            .compose(_dio.options, 'https://wormhole.canoe.finance',
+                queryParameters: queryParameters, data: _data)
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = WormHoleVO.fromJson(_result.data!);
     return value;
   }
 

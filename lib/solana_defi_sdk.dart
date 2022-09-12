@@ -7,9 +7,8 @@ import 'package:bip39/bip39.dart' as bip39;
 import 'package:collection/collection.dart';
 import 'package:decimal/decimal.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:jupiter_aggregator/jupiter_aggregator.dart';
+import 'package:simple_logger/simple_logger.dart';
 import 'package:solana/base58.dart';
 import 'package:solana/dto.dart';
 import 'package:solana/encoder.dart';
@@ -57,20 +56,27 @@ class SolanaDeFiSDK {
   static const int lamportsPerSol = 1000000000;
   static const int solDecimalPlaces = 9;
 
+  static final logger = SimpleLogger();
+
   static ClusterEnvironment? _env;
   // static final httpClient = http.Client();
-  static final JupiterAggregatorClient _jupClient = JupiterAggregatorClient();
-  static final _api = ApiClient(Dio());
+  // static final JupiterAggregatorClient _jupClient = JupiterAggregatorClient();
+  static late final ApiClient _api;
 
   SolanaClient? _client;
   SolanaClient get client => _client!;
-  JupiterAggregatorClient get jup => _jupClient;
+  // JupiterAggregatorClient get jup => _jupClient;
 
   static final SolanaDeFiSDK _instance = SolanaDeFiSDK._();
   static SolanaDeFiSDK get instance => _instance;
 
   // factory SolanaDeFiSDK() => _instance!;
-  SolanaDeFiSDK._();
+  SolanaDeFiSDK._() {
+    final dio = Dio();
+    dio.interceptors.add(LogInterceptor());
+    _api = ApiClient(Dio());
+    logger.setLevel(Level.WARNING);
+  }
 
   /// create mainnet(https://api.mainnet-beta.solana.com) solana client by default
   ///
@@ -79,9 +85,11 @@ class SolanaDeFiSDK {
   static SolanaDeFiSDK initialize({
     ClusterEnvironment? env,
     SolanaClient? solanaClient,
+    Level? loggerLevel,
   }) {
-    SolanaClient client;
     assert(!(env != null && solanaClient != null));
+
+    SolanaClient client;
     _env = env;
     if (solanaClient != null) {
       client = solanaClient;
@@ -104,6 +112,7 @@ class SolanaDeFiSDK {
       }
     }
     instance._client = client;
+    logger.setLevel(loggerLevel ?? Level.WARNING);
     return instance;
   }
 
@@ -114,23 +123,28 @@ class SolanaDeFiSDK {
     final metadata = await client.rpcClient
         .getMetadata(mint: Ed25519HDPublicKey.fromBase58(address));
     if (metadata?.name != null) {
-      debugPrint('add name ${metadata!.name}/$address to cache.');
+      logger.info('add name ${metadata!.name}/$address to cache.');
       TokenSymbols.data[metadata.name] = address;
       return metadata.name;
     }
     return null;
   }
 
+  Future<Mint> getMint(String address) async {
+    return await client.getMint(
+        address: Ed25519HDPublicKey.fromBase58(address));
+  }
+
   Future<int> getAvailableTransferLamports(String address) async {
     final fees = await client.rpcClient.getFees();
     final balance = await getBalance(address);
     final fee = fees.feeCalculator.lamportsPerSignature;
-    debugPrint('[sdk] balance is $balance, transfer fee is $fee');
+    logger.info('[sdk] balance is $balance, transfer fee is $fee');
     return balance > fee ? balance - fee : 0;
   }
 
   Future<int> getBalance(String address) async {
-    debugPrint('[${_env ?? ClusterEnvironment.mainnet}](getBalance) $address');
+    logger.info('[${_env ?? ClusterEnvironment.mainnet}](getBalance) $address');
     return await client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
   }
@@ -149,7 +163,7 @@ class SolanaDeFiSDK {
           num.parse(parsed.info.tokenAmount.amount) >
               0; // && parsed.info.tokenAmount.amount;
     });
-    // print(filtered.length);
+    // logger.i(filtered.length);
     for (final element in filtered) {
       final data = element.account.data as ParsedAccountData;
       final programData = data as ParsedSplTokenProgramAccountData;
@@ -157,7 +171,7 @@ class SolanaDeFiSDK {
       final mint = parsed.info.mint;
       final amount = parsed.info.tokenAmount.uiAmountString;
       final isNft = parsed.info.tokenAmount.decimals == 0;
-      debugPrint('--> mint:$mint isNft:$isNft amount:$amount');
+      logger.info('--> mint:$mint isNft:$isNft amount:$amount');
     }
     return filtered
         .map((element) =>
@@ -175,7 +189,7 @@ class SolanaDeFiSDK {
       encoding: Encoding.jsonParsed,
       commitment: Commitment.confirmed,
     );
-    debugPrint('length is ${response.length}');
+    logger.info('length is ${response.length}');
     final data = response.first.account.data as ParsedAccountData;
     final programData = data as ParsedSplTokenProgramAccountData;
     return programData.parsed as TokenAccountData;
@@ -186,7 +200,7 @@ class SolanaDeFiSDK {
 
   Future<String> transfer(
       Wallet source, String destinationAddress, int amount) async {
-    debugPrint(
+    logger.info(
         '[sdk] transfer ${uiAmount(amount)}($amount) from "${source.address}" to "$destinationAddress"');
     // final source = Ed25519HDPublicKey.fromBase58(sourceAddress);
     final destination = Ed25519HDPublicKey.fromBase58(destinationAddress);
@@ -198,7 +212,7 @@ class SolanaDeFiSDK {
         message: Message.only(instruction),
         signers: [source],
         commitment: Commitment.confirmed);
-    debugPrint('[sdk] transfer transaction id is $transactionId');
+    logger.info('[sdk] transfer transaction id is $transactionId');
     return transactionId;
   }
 
@@ -233,19 +247,19 @@ class SolanaDeFiSDK {
     // String mnemonic = generateMnemonic();
     /*
     List<int> seed = bip39.mnemonicToSeed(mnemonic);
-    debugPrint('seed is $seed');
+    logger.info(message)('seed is $seed');
     String seedHash = sha256
         .convert(seed)
         .bytes
         .sublist(0, 4)
         .map((e) => e.toRadixString(16).padLeft(2, "0"))
         .join("");
-    debugPrint('seedHash1 is $seedHash');*/
-    debugPrint('seedHash2 is "${mnemonic.hashCode}"');
+    logger.info(message)('seedHash1 is $seedHash');*/
+    logger.info('seedHash2 is "${mnemonic.hashCode}"');
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
-    debugPrint('wallet address is "${wallet.address}"');
+    logger.info('wallet address is "${wallet.address}"');
     return wallet;
   }
 
@@ -260,7 +274,7 @@ class SolanaDeFiSDK {
     }
     if (decodedKey == null ||
         (decodedKey.length != 64 && decodedKey.length != 32)) {
-      debugPrint('decoded key is $decodedKey');
+      logger.info('decoded key is $decodedKey');
       throw 'invalid key';
     }
     final privateKey = decodedKey.sublist(0, 32);
@@ -334,12 +348,28 @@ class SolanaDeFiSDK {
     }
   }
 
-  /// get nfts on mainnet
+  /// from sol to eth
+  ///
+  /// amount
+  Future cross(
+      String address, String mint, String targetAddress, String amount) async {
+    try {
+      return await _api.wormhole(WormHoleDTO(
+          userPublicKey: address,
+          mint: mint,
+          targetAddress: targetAddress,
+          amount: amount));
+    } on DioError catch (e) {
+      logger.severe('${e.message} - ${e.response?.data.toString()}');
+    }
+  }
+
+  /// get nfts on Mainnet
   Future<NftScanGetTransactionResponse> getNfts(String address,
       {pageIndex = 0, pageSize = 20}) async {
     final response = await _api.getTransactionByUserAddress(
         userAddress: address, pageIndex: pageIndex, pageSize: pageSize);
-    debugPrint('found ${response.data?.total} nfts');
+    logger.info('found ${response.data?.total} nfts');
     return response;
 
     /*

@@ -58,6 +58,73 @@ abstract class ApiClient {
 
   @POST('https://quote-api.jup.ag/v1/swap')
   Future<JupSwapTransactions> jupPostSwap(@Body() SwapDTO dto);
+
+  // - wormhole by canoe.finance -
+
+  /// wormhole api wrapped by canoe.finance
+  @POST('https://wormhole.canoe.finance')
+  @Headers({'Content-Type': 'application/json'})
+  Future<WormHoleVO> wormhole(@Body() WormHoleDTO dto);
+}
+
+@JsonSerializable()
+class WormHoleDTO {
+  final String userPublicKey;
+  final String mint;
+  final String targetAddress;
+  final String amount;
+
+  WormHoleDTO(
+      {required this.userPublicKey,
+      required this.mint,
+      required this.targetAddress,
+      required this.amount});
+
+  factory WormHoleDTO.fromJson(Map<String, dynamic> json) =>
+      _$WormHoleDTOFromJson(json);
+  Map<String, dynamic> toJson() => _$WormHoleDTOToJson(this);
+}
+
+@JsonSerializable()
+class WormHoleVO {
+  final String recentBlockhash;
+  final String feePayer;
+  final String? nonceInfo;
+  final List<String> signers;
+  final List<WormHoleInstruction> instructions;
+
+  WormHoleVO(this.recentBlockhash, this.feePayer, this.nonceInfo, this.signers,
+      this.instructions);
+
+  factory WormHoleVO.fromJson(Map<String, dynamic> json) =>
+      _$WormHoleVOFromJson(json);
+  Map<String, dynamic> toJson() => _$WormHoleVOToJson(this);
+}
+
+@JsonSerializable()
+class WormHoleInstruction {
+  final List<WormHoleInstructionKey> keys;
+  final String programId;
+  final List<int> data;
+
+  WormHoleInstruction(this.keys, this.programId, this.data);
+
+  factory WormHoleInstruction.fromJson(Map<String, dynamic> json) =>
+      _$WormHoleInstructionFromJson(json);
+  Map<String, dynamic> toJson() => _$WormHoleInstructionToJson(this);
+}
+
+@JsonSerializable()
+class WormHoleInstructionKey {
+  final String pubKey;
+  final bool isSigner;
+  final bool isWritable;
+
+  WormHoleInstructionKey(this.pubKey, this.isSigner, this.isWritable);
+
+  factory WormHoleInstructionKey.fromJson(Map<String, dynamic> json) =>
+      _$WormHoleInstructionKeyFromJson(json);
+  Map<String, dynamic> toJson() => _$WormHoleInstructionKeyToJson(this);
 }
 
 @JsonSerializable()

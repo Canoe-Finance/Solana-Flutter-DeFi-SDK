@@ -11,10 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
   solana: ^0.26.0
-  jupiter_aggregator: ^1.0.0
   retrofit: '>=3.0.0 <4.0.0'
   flutter_secure_storage: ^6.0.0
-  logger: any # for logging purpose
+  simple_logger: ^1.9.0+1
   json_annotation: ">=4.6.0"
 
 dev_dependencies:
