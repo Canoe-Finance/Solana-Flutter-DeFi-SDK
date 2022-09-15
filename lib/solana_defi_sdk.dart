@@ -69,13 +69,13 @@ class SolanaDeFiSDK {
 
   static final SolanaDeFiSDK _instance = SolanaDeFiSDK._();
   static SolanaDeFiSDK get instance => _instance;
+  static ClusterEnvironment? get env => _env;
 
   // factory SolanaDeFiSDK() => _instance!;
   SolanaDeFiSDK._() {
     final dio = Dio();
     dio.interceptors.add(LogInterceptor());
     _api = ApiClient(Dio());
-    logger.setLevel(Level.WARNING);
   }
 
   /// create mainnet(https://api.mainnet-beta.solana.com) solana client by default
@@ -85,7 +85,6 @@ class SolanaDeFiSDK {
   static SolanaDeFiSDK initialize({
     ClusterEnvironment? env,
     SolanaClient? solanaClient,
-    Level? loggerLevel,
   }) {
     assert(!(env != null && solanaClient != null));
 
@@ -112,7 +111,7 @@ class SolanaDeFiSDK {
       }
     }
     instance._client = client;
-    logger.setLevel(loggerLevel ?? Level.WARNING);
+    // logger.setLevel(loggerLevel ?? Level.WARNING);
     return instance;
   }
 
@@ -136,11 +135,15 @@ class SolanaDeFiSDK {
   }
 
   Future<int> getAvailableTransferLamports(String address) async {
-    final fees = await client.rpcClient.getFees();
+    final fee = await getFee();
     final balance = await getBalance(address);
-    final fee = fees.feeCalculator.lamportsPerSignature;
     logger.info('[sdk] balance is $balance, transfer fee is $fee');
     return balance > fee ? balance - fee : 0;
+  }
+
+  Future<int> getFee() async {
+    final fees = await client.rpcClient.getFees();
+    return fees.feeCalculator.lamportsPerSignature;
   }
 
   Future<int> getBalance(String address) async {
