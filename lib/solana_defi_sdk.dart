@@ -1,6 +1,7 @@
 library solana_defi_sdk;
 
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:bip39/bip39.dart' as bip39;
@@ -27,7 +28,7 @@ class TokenSymbols {
   };
 
   static String? getAddress(String symbol) {
-    return data[symbol];
+    return data[symbol.toUpperCase()];
   }
 
   static String? getSymbol(String address) {
@@ -130,6 +131,7 @@ class SolanaDeFiSDK {
   }
 
   Future<Mint> getMint(String address) async {
+    logger.info('get mint for $address');
     return await client.getMint(
         address: Ed25519HDPublicKey.fromBase58(address));
   }
@@ -139,6 +141,12 @@ class SolanaDeFiSDK {
     final balance = await getBalance(address);
     logger.info('[sdk] balance is $balance, transfer fee is $fee');
     return balance > fee ? balance - fee : 0;
+  }
+
+  /// parse ui amount to decimals
+  Future<int> parseUIAmount(String mintAddress, String uiAmount) async {
+    final mint = await getMint(mintAddress);
+    return (num.parse(uiAmount) * pow(10, mint.decimals)).toInt();
   }
 
   Future<int> getFee() async {
@@ -305,6 +313,8 @@ class SolanaDeFiSDK {
     /// Fee BPS (only pass in if you want to charge a fee on this swap)
     int? feeBps,
   }) async {
+    logger.info(
+        'inputMint: $inputMint, outputMint: $outputMint, amount: $amount, feeBps: $feeBps, slippage: $slippage');
     final response = await _api.jupGetQuote(
         inputMint: inputMint,
         outputMint: outputMint,
@@ -348,6 +358,7 @@ class SolanaDeFiSDK {
           await client.rpcClient.sendTransaction(signed.encode());
       await client.waitForSignatureStatus(transactionId,
           status: Commitment.confirmed, timeout: const Duration(seconds: 30));
+      logger.info('swap - transactionId: $transactionId');
     }
   }
 
