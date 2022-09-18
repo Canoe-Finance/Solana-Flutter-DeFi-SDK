@@ -8,6 +8,7 @@ part of 'api.dart';
 
 WormHoleDTO _$WormHoleDTOFromJson(Map<String, dynamic> json) => WormHoleDTO(
       userPublicKey: json['userPublicKey'] as String,
+      messageAddress: json['messageAddress'] as String,
       mint: json['mint'] as String,
       targetAddress: json['targetAddress'] as String,
       amount: json['amount'] as String,
@@ -16,28 +17,10 @@ WormHoleDTO _$WormHoleDTOFromJson(Map<String, dynamic> json) => WormHoleDTO(
 Map<String, dynamic> _$WormHoleDTOToJson(WormHoleDTO instance) =>
     <String, dynamic>{
       'userPublicKey': instance.userPublicKey,
+      'messageAddress': instance.messageAddress,
       'mint': instance.mint,
       'targetAddress': instance.targetAddress,
       'amount': instance.amount,
-    };
-
-WormHoleVO _$WormHoleVOFromJson(Map<String, dynamic> json) => WormHoleVO(
-      json['recentBlockhash'] as String,
-      json['feePayer'] as String,
-      json['nonceInfo'] as String?,
-      (json['signers'] as List<dynamic>).map((e) => e as String).toList(),
-      (json['instructions'] as List<dynamic>)
-          .map((e) => WormHoleInstruction.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-
-Map<String, dynamic> _$WormHoleVOToJson(WormHoleVO instance) =>
-    <String, dynamic>{
-      'recentBlockhash': instance.recentBlockhash,
-      'feePayer': instance.feePayer,
-      'nonceInfo': instance.nonceInfo,
-      'signers': instance.signers,
-      'instructions': instance.instructions,
     };
 
 WormHoleInstruction _$WormHoleInstructionFromJson(Map<String, dynamic> json) =>
@@ -331,71 +314,93 @@ Map<String, dynamic> _$NftTransactionRecordToJson(
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers
 
 class _ApiClient implements ApiClient {
-  _ApiClient(this._dio, {this.baseUrl});
+  _ApiClient(
+    this._dio, {
+    this.baseUrl,
+  });
 
   final Dio _dio;
 
   String? baseUrl;
 
   @override
-  Future<NftScanGetTransactionResponse> getTransactionByUserAddress(
-      {required userAddress,
-      collection = '',
-      transferType = 'all',
-      pageIndex = 0,
-      pageSize = 20}) async {
+  Future<NftScanGetTransactionResponse> getTransactionByUserAddress({
+    required userAddress,
+    collection = '',
+    transferType = 'all',
+    pageIndex = 0,
+    pageSize = 20,
+  }) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'user_address': userAddress,
       r'collection': collection,
       r'transferType': transferType,
       r'pageIndex': pageIndex,
-      r'pageSize': pageSize
+      r'pageSize': pageSize,
     };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
-    final _result = await _dio.fetch<Map<String, dynamic>>(_setStreamType<
-        NftScanGetTransactionResponse>(Options(
-            method: 'GET', headers: _headers, extra: _extra)
-        .compose(_dio.options,
-            'https://solana.nftscan.com/nftscan/getTransactionByUserAddress',
-            queryParameters: queryParameters, data: _data)
-        .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<NftScanGetTransactionResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'https://solana.nftscan.com/nftscan/getTransactionByUserAddress',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = NftScanGetTransactionResponse.fromJson(_result.data!);
     return value;
   }
 
   @override
-  Future<String> jupGetPrice({required id, vsToken, amount}) async {
+  Future<String> jupGetPrice({
+    required id,
+    vsToken,
+    amount,
+  }) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'id': id,
       r'vsToken': vsToken,
-      r'amount': amount
+      r'amount': amount,
     };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
-    final _result = await _dio.fetch<String>(_setStreamType<String>(
-        Options(method: 'GET', headers: _headers, extra: _extra)
-            .compose(_dio.options, 'https://quote-api.jup.ag/v1/price',
-                queryParameters: queryParameters, data: _data)
-            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final _result = await _dio.fetch<String>(_setStreamType<String>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'https://quote-api.jup.ag/v1/price',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = _result.data!;
     return value;
   }
 
   @override
-  Future<String> jupGetQuote(
-      {required inputMint,
-      required outputMint,
-      required amount,
-      swapMode,
-      slippage,
-      feeBps,
-      onlyDirectRoutes,
-      userPublicKey}) async {
+  Future<String> jupGetQuote({
+    required inputMint,
+    required outputMint,
+    required amount,
+    swapMode,
+    slippage,
+    feeBps,
+    onlyDirectRoutes,
+    userPublicKey,
+  }) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'inputMint': inputMint,
@@ -405,16 +410,23 @@ class _ApiClient implements ApiClient {
       r'slippage': slippage,
       r'feeBps': feeBps,
       r'onlyDirectRoutes': onlyDirectRoutes,
-      r'userPublicKey': userPublicKey
+      r'userPublicKey': userPublicKey,
     };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
-    final _result = await _dio.fetch<String>(_setStreamType<String>(
-        Options(method: 'GET', headers: _headers, extra: _extra)
-            .compose(_dio.options, 'https://quote-api.jup.ag/v1/quote',
-                queryParameters: queryParameters, data: _data)
-            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final _result = await _dio.fetch<String>(_setStreamType<String>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'https://quote-api.jup.ag/v1/quote',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = _result.data!;
     return value;
   }
@@ -427,33 +439,42 @@ class _ApiClient implements ApiClient {
     final _data = <String, dynamic>{};
     _data.addAll(dto.toJson());
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<JupSwapTransactions>(
-            Options(method: 'POST', headers: _headers, extra: _extra)
-                .compose(_dio.options, 'https://quote-api.jup.ag/v1/swap',
-                    queryParameters: queryParameters, data: _data)
-                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+        _setStreamType<JupSwapTransactions>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'https://quote-api.jup.ag/v1/swap',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = JupSwapTransactions.fromJson(_result.data!);
     return value;
   }
 
   @override
-  Future<WormHoleVO> wormhole(dto) async {
+  Future<String> wormhole(dto) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{r'Content-Type': 'application/json'};
-    _headers.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(dto.toJson());
-    final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<WormHoleVO>(Options(
-                method: 'POST',
-                headers: _headers,
-                extra: _extra,
-                contentType: 'application/json')
-            .compose(_dio.options, 'https://wormhole.canoe.finance',
-                queryParameters: queryParameters, data: _data)
-            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = WormHoleVO.fromJson(_result.data!);
+    final _result = await _dio.fetch<String>(_setStreamType<String>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'https://wormhole.canoe.finance',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = _result.data!;
     return value;
   }
 

@@ -21,6 +21,7 @@ import 'api.dart';
 
 /// address name and label mapping for mainnet
 class TokenSymbols {
+  /// for mainnet
   static final data = {
     'SOL': 'So11111111111111111111111111111111111111112',
     'USDT': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
@@ -41,15 +42,17 @@ class TokenSymbols {
 enum ClusterEnvironment { mainnet, devnet, testnet }
 
 class KeyManager {
+  static const storeKey = 'mnemonic';
+
   /// using flutter secure storage store mnemonic
   ///
   /// TODO
   static Future<void> persistMnemonic(String mnemonic) {
-    return const FlutterSecureStorage().write(key: "mnemonic", value: mnemonic);
+    return const FlutterSecureStorage().write(key: storeKey, value: mnemonic);
   }
 
   static Future<String?> restoreMnemonic() {
-    return const FlutterSecureStorage().read(key: 'mnemonic');
+    return const FlutterSecureStorage().read(key: storeKey);
   }
 }
 
@@ -209,6 +212,7 @@ class SolanaDeFiSDK {
   String uiAmount(int lamports) =>
       (lamports / lamportsPerSol).toStringAsFixed(solDecimalPlaces);
 
+  /// TODO client.transferLamports or transferSplToken
   Future<String> transfer(
       Wallet source, String destinationAddress, int amount) async {
     logger.info(
@@ -344,38 +348,81 @@ class SolanaDeFiSDK {
   }
 
   Future<void> swap(Wallet wallet, JupSwapTransactions transactions) async {
-    List<Uint8List> txs = [
+    final txs = [
       transactions.setupTransaction,
       transactions.swapTransaction,
       transactions.cleanupTransaction
-    ].whereNotNull().map(base64Decode).map((t) => t.sublist(65)).toList();
+    ]
+        .whereNotNull()
+        .map(base64Decode)
+        // { 01 + empty 64 byte signature (64 bytes of 00) + unsigned transaction }
+        // .map((t) => t.sublist(65)) // if not using CompiledMessage.fromSignedTransaction
+        .toList();
     for (var tx in txs) {
+      final message = Message.decompile(
+          CompiledMessage.fromSignedTransaction(ByteArray(tx)));
+      /*
       final recent = await client.rpcClient.getRecentBlockhash();
-      final message = Message.decompile(CompiledMessage(ByteArray(tx)));
       final signed = await wallet.signMessage(
           message: message, recentBlockhash: recent.blockhash);
       final transactionId =
-          await client.rpcClient.sendTransaction(signed.encode());
-      await client.waitForSignatureStatus(transactionId,
-          status: Commitment.confirmed, timeout: const Duration(seconds: 30));
+          await client.rpcClient.sendTransaction(signed.encode());*/
+
+      final transactionId = await client.sendAndConfirmTransaction(
+          message: message,
+          signers: [wallet],
+          commitment: Commitment.confirmed);
+      await client.waitForSignatureStatus(
+        transactionId,
+        status: Commitment.confirmed,
+      );
       logger.info('swap - transactionId: $transactionId');
     }
   }
 
-  /// from sol to eth
-  ///
-  /// amount
-  Future cross(
-      String address, String mint, String targetAddress, String amount) async {
-    try {
-      return await _api.wormhole(WormHoleDTO(
-          userPublicKey: address,
-          mint: mint,
-          targetAddress: targetAddress,
-          amount: amount));
-    } on DioError catch (e) {
-      logger.severe('${e.message} - ${e.response?.data.toString()}');
-    }
+  /// cross chain by wormhole api from an api created by canoe.fiance,
+  /// Redeem by returned TransactionId at https://www.portalbridge.com/#/redeem
+  Future<TransactionId> cross(
+    Wallet wallet, {
+    required String mint,
+    required String targetAddress,
+    required int amount,
+  }) async {
+    final messageKey = await Ed25519HDKeyPair.random();
+    final dto = WormHoleDTO(
+        userPublicKey: wallet.address,
+        mint: mint,
+        targetAddress: targetAddress,
+        messageAddress: messageKey.address,
+        amount: amount.toString());
+    logger.info('cross by ${dto.toJson()}');
+
+    final transaction = await _api.wormhole(dto);
+    final data = ByteArray(base64Decode(transaction));
+    /*
+    final signaturesCount = CompactU16.raw(data.toList()).value;
+    logger.info('signaturesCount is $signaturesCount');*/
+    final message = Message.decompile(
+      CompiledMessage.fromSignedTransaction(data),
+    );
+    /*
+    // other way
+    final recent = await client.rpcClient.getRecentBlockhash();
+    final signed = await wallet.signMessage(
+        message: message, recentBlockhash: recent.blockhash);
+    final transactionId =
+        await client.rpcClient.sendTransaction(signed.encode());*/
+    final transactionId = await client.sendAndConfirmTransaction(
+      message: message,
+      signers: [wallet, messageKey],
+      commitment: Commitment.confirmed,
+    );
+    await client.waitForSignatureStatus(
+      transactionId,
+      status: Commitment.confirmed,
+    );
+    logger.info('cross - transactionId: $transactionId');
+    return transactionId;
   }
 
   /// get nfts on Mainnet

@@ -63,28 +63,32 @@ abstract class ApiClient {
 
   /// wormhole api wrapped by canoe.finance
   @POST('https://wormhole.canoe.finance')
-  @Headers({'Content-Type': 'application/json'})
-  Future<WormHoleVO> wormhole(@Body() WormHoleDTO dto);
+  // @Headers({'Content-Type': 'application/json'})
+  Future<String> wormhole(@Body() WormHoleDTO dto);
 }
 
 @JsonSerializable()
 class WormHoleDTO {
   final String userPublicKey;
+  final String messageAddress;
   final String mint;
   final String targetAddress;
   final String amount;
 
-  WormHoleDTO(
-      {required this.userPublicKey,
-      required this.mint,
-      required this.targetAddress,
-      required this.amount});
+  WormHoleDTO({
+    required this.userPublicKey,
+    required this.messageAddress,
+    required this.mint,
+    required this.targetAddress,
+    required this.amount,
+  });
 
   factory WormHoleDTO.fromJson(Map<String, dynamic> json) =>
       _$WormHoleDTOFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleDTOToJson(this);
 }
 
+/*
 @JsonSerializable()
 class WormHoleVO {
   final String recentBlockhash;
@@ -99,7 +103,7 @@ class WormHoleVO {
   factory WormHoleVO.fromJson(Map<String, dynamic> json) =>
       _$WormHoleVOFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleVOToJson(this);
-}
+}*/
 
 @JsonSerializable()
 class WormHoleInstruction {
