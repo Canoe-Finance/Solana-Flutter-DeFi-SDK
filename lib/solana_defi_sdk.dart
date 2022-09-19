@@ -2,7 +2,6 @@ library solana_defi_sdk;
 
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:collection/collection.dart';

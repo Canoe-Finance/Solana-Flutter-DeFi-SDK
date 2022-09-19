@@ -23,40 +23,6 @@ Map<String, dynamic> _$WormHoleDTOToJson(WormHoleDTO instance) =>
       'amount': instance.amount,
     };
 
-WormHoleInstruction _$WormHoleInstructionFromJson(Map<String, dynamic> json) =>
-    WormHoleInstruction(
-      (json['keys'] as List<dynamic>)
-          .map(
-              (e) => WormHoleInstructionKey.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      json['programId'] as String,
-      (json['data'] as List<dynamic>).map((e) => e as int).toList(),
-    );
-
-Map<String, dynamic> _$WormHoleInstructionToJson(
-        WormHoleInstruction instance) =>
-    <String, dynamic>{
-      'keys': instance.keys,
-      'programId': instance.programId,
-      'data': instance.data,
-    };
-
-WormHoleInstructionKey _$WormHoleInstructionKeyFromJson(
-        Map<String, dynamic> json) =>
-    WormHoleInstructionKey(
-      json['pubKey'] as String,
-      json['isSigner'] as bool,
-      json['isWritable'] as bool,
-    );
-
-Map<String, dynamic> _$WormHoleInstructionKeyToJson(
-        WormHoleInstructionKey instance) =>
-    <String, dynamic>{
-      'pubKey': instance.pubKey,
-      'isSigner': instance.isSigner,
-      'isWritable': instance.isWritable,
-    };
-
 SwapDTO _$SwapDTOFromJson(Map<String, dynamic> json) => SwapDTO(
       route: JupRoute.fromJson(json['route'] as Map<String, dynamic>),
       userPublicKey: json['userPublicKey'] as String,

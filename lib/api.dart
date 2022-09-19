@@ -103,8 +103,10 @@ class WormHoleVO {
   factory WormHoleVO.fromJson(Map<String, dynamic> json) =>
       _$WormHoleVOFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleVOToJson(this);
-}*/
+}
+*/
 
+/*
 @JsonSerializable()
 class WormHoleInstruction {
   final List<WormHoleInstructionKey> keys;
@@ -117,7 +119,9 @@ class WormHoleInstruction {
       _$WormHoleInstructionFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleInstructionToJson(this);
 }
+*/
 
+/*
 @JsonSerializable()
 class WormHoleInstructionKey {
   final String pubKey;
@@ -130,6 +134,7 @@ class WormHoleInstructionKey {
       _$WormHoleInstructionKeyFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleInstructionKeyToJson(this);
 }
+*/
 
 @JsonSerializable()
 class SwapDTO {
