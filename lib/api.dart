@@ -6,8 +6,9 @@ part 'api.g.dart';
 
 @RestApi()
 abstract class ApiClient {
-  /// ApiClient(Dio())
   factory ApiClient(Dio dio) = _ApiClient;
+
+  // - NFTScan -
 
   /// get multi nfts by user address
   @GET('https://solana.nftscan.com/nftscan/getTransactionByUserAddress')
@@ -59,7 +60,7 @@ abstract class ApiClient {
   @POST('https://quote-api.jup.ag/v1/swap')
   Future<JupSwapTransactions> jupPostSwap(@Body() SwapDTO dto);
 
-  // - wormhole by canoe.finance -
+  // - wormhole wrapped by canoe.finance -
 
   /// wormhole api wrapped by canoe.finance
   @POST('https://wormhole.canoe.finance')
@@ -87,54 +88,6 @@ class WormHoleDTO {
       _$WormHoleDTOFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleDTOToJson(this);
 }
-
-/*
-@JsonSerializable()
-class WormHoleVO {
-  final String recentBlockhash;
-  final String feePayer;
-  final String? nonceInfo;
-  final List<String> signers;
-  final List<WormHoleInstruction> instructions;
-
-  WormHoleVO(this.recentBlockhash, this.feePayer, this.nonceInfo, this.signers,
-      this.instructions);
-
-  factory WormHoleVO.fromJson(Map<String, dynamic> json) =>
-      _$WormHoleVOFromJson(json);
-  Map<String, dynamic> toJson() => _$WormHoleVOToJson(this);
-}
-*/
-
-/*
-@JsonSerializable()
-class WormHoleInstruction {
-  final List<WormHoleInstructionKey> keys;
-  final String programId;
-  final List<int> data;
-
-  WormHoleInstruction(this.keys, this.programId, this.data);
-
-  factory WormHoleInstruction.fromJson(Map<String, dynamic> json) =>
-      _$WormHoleInstructionFromJson(json);
-  Map<String, dynamic> toJson() => _$WormHoleInstructionToJson(this);
-}
-*/
-
-/*
-@JsonSerializable()
-class WormHoleInstructionKey {
-  final String pubKey;
-  final bool isSigner;
-  final bool isWritable;
-
-  WormHoleInstructionKey(this.pubKey, this.isSigner, this.isWritable);
-
-  factory WormHoleInstructionKey.fromJson(Map<String, dynamic> json) =>
-      _$WormHoleInstructionKeyFromJson(json);
-  Map<String, dynamic> toJson() => _$WormHoleInstructionKeyToJson(this);
-}
-*/
 
 @JsonSerializable()
 class SwapDTO {

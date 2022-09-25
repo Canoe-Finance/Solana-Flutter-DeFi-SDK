@@ -257,23 +257,25 @@ class SolanaDeFiSDK {
     return bip39.generateMnemonic();
   }
 
+  /// restore wallet, if no info found by (getAccountInfo), will throw an error
+  ///
+  /// String mnemonic = generateMnemonic();
+  /// List<int> seed = bip39.mnemonicToSeed(mnemonic);
+  ///     String seedHash = sha256
+  ///         .convert(seed)
+  ///         .bytes
+  ///         .sublist(0, 4)
+  ///         .map((e) => e.toRadixString(16).padLeft(2, "0"))
+  ///         .join("");
   Future<Wallet> initializeWalletFromMnemonic(String mnemonic) async {
-    // String mnemonic = generateMnemonic();
-    /*
-    List<int> seed = bip39.mnemonicToSeed(mnemonic);
-    logger.info(message)('seed is $seed');
-    String seedHash = sha256
-        .convert(seed)
-        .bytes
-        .sublist(0, 4)
-        .map((e) => e.toRadixString(16).padLeft(2, "0"))
-        .join("");
-    logger.info(message)('seedHash1 is $seedHash');*/
-    logger.info('seedHash2 is "${mnemonic.hashCode}"');
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
-    logger.info('wallet address is "${wallet.address}"');
+    logger.info('initialized wallet address is "${wallet.address}"');
+    final info = await client.rpcClient.getAccountInfo(wallet.address);
+    if (info == null) {
+      throw Exception('no account info found');
+    }
     return wallet;
   }
 
