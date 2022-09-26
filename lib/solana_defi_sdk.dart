@@ -38,7 +38,7 @@ class TokenSymbols {
   }
 }
 
-enum ClusterEnvironment { mainnet, devnet, testnet }
+enum ClusterEnv { mainnet, devnet, testnet }
 
 class KeyManager {
   static const storeKey = 'mnemonic';
@@ -61,10 +61,14 @@ class SolanaDeFiSDK {
 
   static final logger = SimpleLogger();
 
-  static ClusterEnvironment? _env;
+  static ClusterEnv? _env;
   // static final httpClient = http.Client();
   // static final JupiterAggregatorClient _jupClient = JupiterAggregatorClient();
   static late final ApiClient _api;
+
+  /// setup by initialize functions
+  Wallet? _wallet;
+  Wallet? get wallet => _wallet;
 
   SolanaClient? _client;
   SolanaClient get client => _client!;
@@ -72,7 +76,7 @@ class SolanaDeFiSDK {
 
   static final SolanaDeFiSDK _instance = SolanaDeFiSDK._();
   static SolanaDeFiSDK get instance => _instance;
-  static ClusterEnvironment? get env => _env;
+  static ClusterEnv? get env => _env;
 
   // factory SolanaDeFiSDK() => _instance!;
   SolanaDeFiSDK._() {
@@ -86,7 +90,7 @@ class SolanaDeFiSDK {
   /// devnet - https://api.devnet.solana.com
   /// testnet - https://api.testnet.solana.com
   static SolanaDeFiSDK initialize({
-    ClusterEnvironment? env,
+    ClusterEnv? env,
     SolanaClient? solanaClient,
   }) {
     assert(!(env != null && solanaClient != null));
@@ -97,12 +101,12 @@ class SolanaDeFiSDK {
       client = solanaClient;
     } else {
       switch (env) {
-        case ClusterEnvironment.devnet:
+        case ClusterEnv.devnet:
           client = SolanaClient(
               rpcUrl: Uri.parse('https://api.devnet.solana.com'),
               websocketUrl: Uri.parse('wss://api.devnet.solana.com'));
           break;
-        case ClusterEnvironment.testnet:
+        case ClusterEnv.testnet:
           client = SolanaClient(
               rpcUrl: Uri.parse('https://api.testnet.solana.com'),
               websocketUrl: Uri.parse('wss://api.testnet.solana.com'));
@@ -157,7 +161,7 @@ class SolanaDeFiSDK {
   }
 
   Future<int> getBalance(String address) async {
-    logger.info('[${_env ?? ClusterEnvironment.mainnet}](getBalance) $address');
+    logger.info('[${_env ?? ClusterEnv.mainnet}](getBalance) $address');
     return await client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
   }
@@ -271,6 +275,7 @@ class SolanaDeFiSDK {
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
+    _wallet = wallet;
     logger.info('initialized wallet address is "${wallet.address}"');
     final info = await client.rpcClient.getAccountInfo(wallet.address);
     if (info == null) {
@@ -294,7 +299,11 @@ class SolanaDeFiSDK {
       throw 'invalid key';
     }
     final privateKey = decodedKey.sublist(0, 32);
-    return await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: privateKey);
+    final keyPair =
+        await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: privateKey);
+
+    _wallet = keyPair;
+    return keyPair;
   }
 
   /// get simple price for swap
