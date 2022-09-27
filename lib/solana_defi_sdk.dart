@@ -275,12 +275,13 @@ class SolanaDeFiSDK {
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
-    _wallet = wallet;
     logger.info('initialized wallet address is "${wallet.address}"');
     final info = await client.rpcClient.getAccountInfo(wallet.address);
     if (info == null) {
+      _wallet = null;
       throw Exception('no account info found');
     }
+    _wallet = wallet;
     return wallet;
   }
 
