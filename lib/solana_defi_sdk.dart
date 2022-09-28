@@ -215,6 +215,18 @@ class SolanaDeFiSDK {
   String uiAmount(int lamports) =>
       (lamports / lamportsPerSol).toStringAsFixed(solDecimalPlaces);
 
+  /// send lamports from initialed wallet
+  Future<TransactionId> transferLamports(String address,
+      {required int lamports}) async {
+    if (wallet == null) {
+      throw 'wallet should initialized first.';
+    }
+    return await client.transferLamports(
+        source: wallet!,
+        destination: Ed25519HDPublicKey.fromBase58(address),
+        lamports: lamports);
+  }
+
   /// TODO client.transferLamports or transferSplToken
   Future<String> transfer(
       Wallet source, String destinationAddress, int amount) async {
