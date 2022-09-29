@@ -122,14 +122,14 @@ class SolanaDeFiSDK {
     return instance;
   }
 
-  Future<String?> getNameOfAddress(String address) async {
-    final name = TokenSymbols.getSymbol(address);
-    if (name != null) return name;
+  Future<String?> getSymbolOfMint(String address) async {
+    final symbol = TokenSymbols.getSymbol(address);
+    if (symbol != null) return symbol;
 
     final metadata = await client.rpcClient
         .getMetadata(mint: Ed25519HDPublicKey.fromBase58(address));
     if (metadata?.name != null) {
-      logger.info('add name ${metadata!.name}/$address to cache.');
+      logger.info('add symbol ${metadata!.name}/$address to cache.');
       TokenSymbols.data[metadata.name] = address;
       return metadata.name;
     }
@@ -269,7 +269,12 @@ class SolanaDeFiSDK {
     return base58encode(key);
   }
 
-  String generateMnemonic() {
+  /// just check the string includes 12 words
+  static bool isValidMnemonic(String mnemonic, {int length = 12}) {
+    return RegExp(r'[a-z]+').allMatches(mnemonic).length == length;
+  }
+
+  static String generateMnemonic() {
     return bip39.generateMnemonic();
   }
 
@@ -283,15 +288,18 @@ class SolanaDeFiSDK {
   ///         .sublist(0, 4)
   ///         .map((e) => e.toRadixString(16).padLeft(2, "0"))
   ///         .join("");
-  Future<Wallet> initializeWalletFromMnemonic(String mnemonic) async {
+  Future<Wallet> initializeWalletFromMnemonic(String mnemonic,
+      {bool shouldHasAccountInfo = false}) async {
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
     logger.info('initialized wallet address is "${wallet.address}"');
-    final info = await client.rpcClient.getAccountInfo(wallet.address);
-    if (info == null) {
-      _wallet = null;
-      throw Exception('no account info found');
+    if (shouldHasAccountInfo) {
+      final info = await client.rpcClient.getAccountInfo(wallet.address);
+      if (info == null) {
+        _wallet = null;
+        throw 'no account info found';
+      }
     }
     _wallet = wallet;
     return wallet;
