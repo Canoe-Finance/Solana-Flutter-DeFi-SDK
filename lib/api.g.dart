@@ -192,42 +192,42 @@ Map<String, dynamic> _$JupGetPriceDataToJson(JupGetPriceData instance) =>
       'price': instance.price,
     };
 
-NftScanGetTransactionResponse _$NftScanGetTransactionResponseFromJson(
+NFTScanGetTransactionResponse _$NFTScanGetTransactionResponseFromJson(
         Map<String, dynamic> json) =>
-    NftScanGetTransactionResponse(
+    NFTScanGetTransactionResponse(
       msg: json['msg'] as String?,
       code: json['code'] as int?,
       data: json['data'] == null
           ? null
-          : NftTransactionsData.fromJson(json['data'] as Map<String, dynamic>),
+          : NFTTransactionsData.fromJson(json['data'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$NftScanGetTransactionResponseToJson(
-        NftScanGetTransactionResponse instance) =>
+Map<String, dynamic> _$NFTScanGetTransactionResponseToJson(
+        NFTScanGetTransactionResponse instance) =>
     <String, dynamic>{
       'msg': instance.msg,
       'code': instance.code,
       'data': instance.data,
     };
 
-NftTransactionsData _$NftTransactionsDataFromJson(Map<String, dynamic> json) =>
-    NftTransactionsData(
+NFTTransactionsData _$NFTTransactionsDataFromJson(Map<String, dynamic> json) =>
+    NFTTransactionsData(
       total: json['nft_tx_total'] as int?,
       records: (json['nft_tx_record'] as List<dynamic>?)
-          ?.map((e) => NftTransactionRecord.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => NFTTransactionRecord.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$NftTransactionsDataToJson(
-        NftTransactionsData instance) =>
+Map<String, dynamic> _$NFTTransactionsDataToJson(
+        NFTTransactionsData instance) =>
     <String, dynamic>{
       'nft_tx_total': instance.total,
       'nft_tx_record': instance.records,
     };
 
-NftTransactionRecord _$NftTransactionRecordFromJson(
+NFTTransactionRecord _$NFTTransactionRecordFromJson(
         Map<String, dynamic> json) =>
-    NftTransactionRecord(
+    NFTTransactionRecord(
       transactionHash: json['transaction_hash'] as String?,
       transactionMethod: json['transaction_method'] as String?,
       transactionTime: json['transaction_time'] as int?,
@@ -249,8 +249,8 @@ NftTransactionRecord _$NftTransactionRecordFromJson(
       tradePlatformProgram: json['tradePlatformProgram'] as String?,
     );
 
-Map<String, dynamic> _$NftTransactionRecordToJson(
-        NftTransactionRecord instance) =>
+Map<String, dynamic> _$NFTTransactionRecordToJson(
+        NFTTransactionRecord instance) =>
     <String, dynamic>{
       'transaction_hash': instance.transactionHash,
       'transaction_method': instance.transactionMethod,
@@ -290,7 +290,7 @@ class _ApiClient implements ApiClient {
   String? baseUrl;
 
   @override
-  Future<NftScanGetTransactionResponse> getTransactionByUserAddress({
+  Future<NFTScanGetTransactionResponse> getTransactionByUserAddress({
     required userAddress,
     collection = '',
     transferType = 'all',
@@ -309,7 +309,7 @@ class _ApiClient implements ApiClient {
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<NftScanGetTransactionResponse>(Options(
+        _setStreamType<NFTScanGetTransactionResponse>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -321,7 +321,7 @@ class _ApiClient implements ApiClient {
               data: _data,
             )
             .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = NftScanGetTransactionResponse.fromJson(_result.data!);
+    final value = NFTScanGetTransactionResponse.fromJson(_result.data!);
     return value;
   }
 

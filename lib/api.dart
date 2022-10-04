@@ -12,7 +12,7 @@ abstract class ApiClient {
 
   /// get multi nfts by user address
   @GET('https://solana.nftscan.com/nftscan/getTransactionByUserAddress')
-  Future<NftScanGetTransactionResponse> getTransactionByUserAddress({
+  Future<NFTScanGetTransactionResponse> getTransactionByUserAddress({
     @Query('user_address') required String userAddress,
     @Query('collection') String? collection = '',
     @Query('transferType') String? transferType = 'all',
@@ -293,34 +293,34 @@ class JupGetPriceData {
 }
 
 @JsonSerializable()
-class NftScanGetTransactionResponse {
+class NFTScanGetTransactionResponse {
   final String? msg;
   final int? code;
-  final NftTransactionsData? data;
+  final NFTTransactionsData? data;
 
-  NftScanGetTransactionResponse({this.msg, this.code, this.data});
+  NFTScanGetTransactionResponse({this.msg, this.code, this.data});
 
-  factory NftScanGetTransactionResponse.fromJson(Map<String, dynamic> json) =>
-      _$NftScanGetTransactionResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$NftScanGetTransactionResponseToJson(this);
+  factory NFTScanGetTransactionResponse.fromJson(Map<String, dynamic> json) =>
+      _$NFTScanGetTransactionResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$NFTScanGetTransactionResponseToJson(this);
 }
 
 @JsonSerializable()
-class NftTransactionsData {
+class NFTTransactionsData {
   @JsonKey(name: 'nft_tx_total')
   final int? total;
   @JsonKey(name: 'nft_tx_record')
-  final List<NftTransactionRecord>? records;
+  final List<NFTTransactionRecord>? records;
 
-  NftTransactionsData({this.total, this.records});
+  NFTTransactionsData({this.total, this.records});
 
-  factory NftTransactionsData.fromJson(Map<String, dynamic> json) =>
-      _$NftTransactionsDataFromJson(json);
-  Map<String, dynamic> toJson() => _$NftTransactionsDataToJson(this);
+  factory NFTTransactionsData.fromJson(Map<String, dynamic> json) =>
+      _$NFTTransactionsDataFromJson(json);
+  Map<String, dynamic> toJson() => _$NFTTransactionsDataToJson(this);
 }
 
 @JsonSerializable()
-class NftTransactionRecord {
+class NFTTransactionRecord {
   @JsonKey(name: 'transaction_hash')
   final String? transactionHash;
   @JsonKey(name: 'transaction_method')
@@ -360,7 +360,7 @@ class NftTransactionRecord {
   @JsonKey(name: 'tradePlatformProgram')
   final String? tradePlatformProgram;
 
-  NftTransactionRecord(
+  NFTTransactionRecord(
       {this.transactionHash,
       this.transactionMethod,
       this.transactionTime,
@@ -381,7 +381,7 @@ class NftTransactionRecord {
       this.tradePlatformLogo,
       this.tradePlatformProgram});
 
-  factory NftTransactionRecord.fromJson(Map<String, dynamic> json) =>
-      _$NftTransactionRecordFromJson(json);
-  Map<String, dynamic> toJson() => _$NftTransactionRecordToJson(this);
+  factory NFTTransactionRecord.fromJson(Map<String, dynamic> json) =>
+      _$NFTTransactionRecordFromJson(json);
+  Map<String, dynamic> toJson() => _$NFTTransactionRecordToJson(this);
 }

@@ -38,20 +38,24 @@ class TokenSymbols {
   }
 }
 
-enum ClusterEnv { mainnet, devnet, testnet }
+enum SolanaID { mainnet, devnet, testnet }
 
 class KeyManager {
-  static const storeKey = 'mnemonic';
+  static const _storeKey = 'mnemonic';
 
   /// using flutter secure storage store mnemonic
   ///
   /// TODO
   static Future<void> persistMnemonic(String mnemonic) {
-    return const FlutterSecureStorage().write(key: storeKey, value: mnemonic);
+    return const FlutterSecureStorage().write(key: _storeKey, value: mnemonic);
   }
 
   static Future<String?> restoreMnemonic() {
-    return const FlutterSecureStorage().read(key: storeKey);
+    return const FlutterSecureStorage().read(key: _storeKey);
+  }
+
+  static Future<void> clear() {
+    return const FlutterSecureStorage().delete(key: _storeKey);
   }
 }
 
@@ -61,10 +65,11 @@ class SolanaDeFiSDK {
 
   static final logger = SimpleLogger();
 
-  static ClusterEnv? _env;
+  static SolanaID? _env;
   // static final httpClient = http.Client();
   // static final JupiterAggregatorClient _jupClient = JupiterAggregatorClient();
-  static late final ApiClient _api;
+  static ApiClient? _api;
+  static ApiClient get api => _api!;
 
   /// setup by initialize functions
   Wallet? _wallet;
@@ -76,37 +81,41 @@ class SolanaDeFiSDK {
 
   static final SolanaDeFiSDK _instance = SolanaDeFiSDK._();
   static SolanaDeFiSDK get instance => _instance;
-  static ClusterEnv? get env => _env;
+  static SolanaID? get env => _env;
 
   // factory SolanaDeFiSDK() => _instance!;
-  SolanaDeFiSDK._() {
-    final dio = Dio();
-    dio.interceptors.add(LogInterceptor());
-    _api = ApiClient(Dio());
-  }
+  SolanaDeFiSDK._();
 
   /// create mainnet(https://api.mainnet-beta.solana.com) solana client by default
   ///
   /// devnet - https://api.devnet.solana.com
   /// testnet - https://api.testnet.solana.com
   static SolanaDeFiSDK initialize({
-    ClusterEnv? env,
+    SolanaID? env,
     SolanaClient? solanaClient,
+    bool debug = false,
   }) {
     assert(!(env != null && solanaClient != null));
 
     SolanaClient client;
-    _env = env;
+    _env = env ?? SolanaID.mainnet;
+
+    logger.info('[$_env] init solana defi sdk by canoe. $_env debug:$debug');
+
+    final dio = Dio();
+    if (debug) dio.interceptors.add(LogInterceptor());
+    _api = ApiClient(dio);
+
     if (solanaClient != null) {
       client = solanaClient;
     } else {
       switch (env) {
-        case ClusterEnv.devnet:
+        case SolanaID.devnet:
           client = SolanaClient(
               rpcUrl: Uri.parse('https://api.devnet.solana.com'),
               websocketUrl: Uri.parse('wss://api.devnet.solana.com'));
           break;
-        case ClusterEnv.testnet:
+        case SolanaID.testnet:
           client = SolanaClient(
               rpcUrl: Uri.parse('https://api.testnet.solana.com'),
               websocketUrl: Uri.parse('wss://api.testnet.solana.com'));
@@ -129,7 +138,7 @@ class SolanaDeFiSDK {
     final metadata = await client.rpcClient
         .getMetadata(mint: Ed25519HDPublicKey.fromBase58(address));
     if (metadata?.name != null) {
-      logger.info('add symbol ${metadata!.name}/$address to cache.');
+      logger.info('[$_env] add symbol ${metadata!.name}/$address to cache.');
       TokenSymbols.data[metadata.name] = address;
       return metadata.name;
     }
@@ -137,7 +146,7 @@ class SolanaDeFiSDK {
   }
 
   Future<Mint> getMint(String address) async {
-    logger.info('get mint for $address');
+    logger.info('[$_env] get mint for $address');
     return await client.getMint(
         address: Ed25519HDPublicKey.fromBase58(address));
   }
@@ -145,7 +154,7 @@ class SolanaDeFiSDK {
   Future<int> getAvailableTransferLamports(String address) async {
     final fee = await getFee();
     final balance = await getBalance(address);
-    logger.info('[sdk] balance is $balance, transfer fee is $fee');
+    logger.info('[$_env] balance is $balance, transfer fee is $fee');
     return balance > fee ? balance - fee : 0;
   }
 
@@ -161,7 +170,7 @@ class SolanaDeFiSDK {
   }
 
   Future<int> getBalance(String address) async {
-    logger.info('[${_env ?? ClusterEnv.mainnet}](getBalance) $address');
+    logger.info('[$_env](getBalance) $address');
     return await client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
   }
@@ -187,8 +196,8 @@ class SolanaDeFiSDK {
       final parsed = programData.parsed as TokenAccountData;
       final mint = parsed.info.mint;
       final amount = parsed.info.tokenAmount.uiAmountString;
-      final isNft = parsed.info.tokenAmount.decimals == 0;
-      logger.info('--> mint:$mint isNft:$isNft amount:$amount');
+      final isNFT = parsed.info.tokenAmount.decimals == 0;
+      logger.info('[$_env] --> mint:$mint isNFT:$isNFT amount:$amount');
     }
     return filtered
         .map((element) =>
@@ -206,7 +215,7 @@ class SolanaDeFiSDK {
       encoding: Encoding.jsonParsed,
       commitment: Commitment.confirmed,
     );
-    logger.info('length is ${response.length}');
+    logger.info('[$_env] length is ${response.length}');
     final data = response.first.account.data as ParsedAccountData;
     final programData = data as ParsedSplTokenProgramAccountData;
     return programData.parsed as TokenAccountData;
@@ -231,7 +240,7 @@ class SolanaDeFiSDK {
   Future<String> transfer(
       Wallet source, String destinationAddress, int amount) async {
     logger.info(
-        '[sdk] transfer ${uiAmount(amount)}($amount) from "${source.address}" to "$destinationAddress"');
+        '[$_env] transfer ${uiAmount(amount)}($amount) from "${source.address}" to "$destinationAddress"');
     // final source = Ed25519HDPublicKey.fromBase58(sourceAddress);
     final destination = Ed25519HDPublicKey.fromBase58(destinationAddress);
     final instruction = SystemInstruction.transfer(
@@ -242,7 +251,7 @@ class SolanaDeFiSDK {
         message: Message.only(instruction),
         signers: [source],
         commitment: Commitment.confirmed);
-    logger.info('[sdk] transfer transaction id is $transactionId');
+    logger.info('[$_env] transfer transaction id is $transactionId');
     return transactionId;
   }
 
@@ -278,22 +287,29 @@ class SolanaDeFiSDK {
     return bip39.generateMnemonic();
   }
 
+  Future<void> signOut() async {
+    await KeyManager.clear();
+    _wallet = null;
+  }
+
+  Future<Wallet> restoreWallet() async {
+    if (_wallet != null) return _wallet!;
+    final mnemonic = await KeyManager.restoreMnemonic();
+    if (mnemonic?.trim().isNotEmpty ?? false) {
+      throw 'cannot restore wallet, try import again.';
+    }
+    return initWalletFromMnemonic(mnemonic!);
+  }
+
   /// restore wallet, if no info found by (getAccountInfo), will throw an error
   ///
-  /// String mnemonic = generateMnemonic();
-  /// List<int> seed = bip39.mnemonicToSeed(mnemonic);
-  ///     String seedHash = sha256
-  ///         .convert(seed)
-  ///         .bytes
-  ///         .sublist(0, 4)
-  ///         .map((e) => e.toRadixString(16).padLeft(2, "0"))
-  ///         .join("");
-  Future<Wallet> initializeWalletFromMnemonic(String mnemonic,
+  /// shouldHasAccountInfo - throw error if set to true and no account info found by solana getAccountInfo api
+  Future<Wallet> initWalletFromMnemonic(String mnemonic,
       {bool shouldHasAccountInfo = false}) async {
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
-    logger.info('initialized wallet address is "${wallet.address}"');
+    logger.info('[$_env] initialized wallet address is "${wallet.address}"');
     if (shouldHasAccountInfo) {
       final info = await client.rpcClient.getAccountInfo(wallet.address);
       if (info == null) {
@@ -305,7 +321,7 @@ class SolanaDeFiSDK {
     return wallet;
   }
 
-  Future<Wallet> initializeWalletFromPrivateKey(String key) async {
+  Future<Wallet> initWalletFromPrivateKey(String key) async {
     List<int>? decodedKey;
     try {
       decodedKey = base58decode(key);
@@ -316,7 +332,7 @@ class SolanaDeFiSDK {
     }
     if (decodedKey == null ||
         (decodedKey.length != 64 && decodedKey.length != 32)) {
-      logger.info('decoded key is $decodedKey');
+      logger.info('[$_env] decoded key is $decodedKey');
       throw 'invalid key';
     }
     final privateKey = decodedKey.sublist(0, 32);
@@ -334,7 +350,7 @@ class SolanaDeFiSDK {
   Future<JupGetPriceData?> getSwapPrice(
       String input, String output, num amount) async {
     final response =
-        await _api.jupGetPrice(id: input, vsToken: output, amount: amount);
+        await api.jupGetPrice(id: input, vsToken: output, amount: amount);
     return JupResponse<JupGetPriceData>.fromJson(jsonDecode(response),
         (json) => JupGetPriceData.fromJson(json as dynamic)).data;
   }
@@ -349,8 +365,8 @@ class SolanaDeFiSDK {
     int? feeBps,
   }) async {
     logger.info(
-        'inputMint: $inputMint, outputMint: $outputMint, amount: $amount, feeBps: $feeBps, slippage: $slippage');
-    final response = await _api.jupGetQuote(
+        '[$_env] inputMint: $inputMint, outputMint: $outputMint, amount: $amount, feeBps: $feeBps, slippage: $slippage');
+    final response = await api.jupGetQuote(
         inputMint: inputMint,
         outputMint: outputMint,
         amount: amount,
@@ -373,7 +389,7 @@ class SolanaDeFiSDK {
     /// Fee token account for the output token (only pass in if you set a *feeBps*)
     String? feeAccount,
   }) async {
-    final response = await _api.jupPostSwap(SwapDTO(
+    final response = await api.jupPostSwap(SwapDTO(
         route: route, userPublicKey: publicKey, feeAccount: feeAccount));
     return response;
   }
@@ -407,7 +423,7 @@ class SolanaDeFiSDK {
         transactionId,
         status: Commitment.confirmed,
       );
-      logger.info('swap - transactionId: $transactionId');
+      logger.info('[$_env] swap - transactionId: $transactionId');
     }
   }
 
@@ -426,9 +442,9 @@ class SolanaDeFiSDK {
         targetAddress: targetAddress,
         messageAddress: messageKey.address,
         amount: amount.toString());
-    logger.info('cross by ${dto.toJson()}');
+    logger.info('[$_env] cross by ${dto.toJson()}');
 
-    final transaction = await _api.wormhole(dto);
+    final transaction = await api.wormhole(dto);
     final data = ByteArray(base64Decode(transaction));
     /*
     final signaturesCount = CompactU16.raw(data.toList()).value;
@@ -452,16 +468,16 @@ class SolanaDeFiSDK {
       transactionId,
       status: Commitment.confirmed,
     );
-    logger.info('cross - transactionId: $transactionId');
+    logger.info('[$_env] cross - transactionId: $transactionId');
     return transactionId;
   }
 
   /// get nfts on Mainnet
-  Future<NftScanGetTransactionResponse> getNfts(String address,
+  Future<NFTScanGetTransactionResponse> getNFTs(String address,
       {pageIndex = 0, pageSize = 20}) async {
-    final response = await _api.getTransactionByUserAddress(
+    final response = await api.getTransactionByUserAddress(
         userAddress: address, pageIndex: pageIndex, pageSize: pageSize);
-    logger.info('found ${response.data?.total} nfts');
+    logger.info('[$_env] found ${response.data?.total} nfts');
     return response;
 
     /*
