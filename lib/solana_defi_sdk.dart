@@ -295,10 +295,13 @@ class SolanaDeFiSDK {
   Future<Wallet> restoreWallet() async {
     if (_wallet != null) return _wallet!;
     final mnemonic = await KeyManager.restoreMnemonic();
+
     if (mnemonic?.trim().isNotEmpty ?? false) {
-      throw 'cannot restore wallet, try import again.';
+      logger.info('[$_env] restore wallet...');
+      return initWalletFromMnemonic(mnemonic!);
     }
-    return initWalletFromMnemonic(mnemonic!);
+
+    throw 'cannot restore wallet, try import again.';
   }
 
   /// restore wallet, if no info found by (getAccountInfo), will throw an error
