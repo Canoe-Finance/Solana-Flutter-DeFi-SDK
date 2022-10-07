@@ -31,6 +31,76 @@ Build the wallet module on the basis of [cryptoplease-dart](https://github.com/c
   - Building and signing offline transactions, as well as convenience methods to sign and send the transaction. Also, the ability to listen for a status change on a given signature. The latter can be used to wait for a transaction to be in the confirmed or finalized state.
   - Support for decoding Metaplex NFT metadata.
 
+## Development
+
+***IMPORTANT current sdk is unstable right now, api may change in future.***
+
+- Initialize
+
+```dart
+final sdk = SolanaDeFiSDK.initialize();
+// for devnet
+final sdk = SolanaDeFiSDK.initialize(env: SolanaID.devnet);
+```
+
+- Wallet
+
+```dart
+// create wallet
+import 'package:bip39/bip39.dart' as bip39;
+final mnemonic = bip39.generateMnemonic();
+
+// import wallet
+final wallet = await sdk.initWalletFromMnemonic(/*String mnemonic*/);
+final wallet = await sdk.initWalletFromPrivateKey(/*String key*/);
+// you can get wallet later by
+final wallet = sdk.wallet!;
+```
+
+- Balance & NFTs
+
+```dart
+// get sol balance
+final int balance = await sdk.getBalance(/*String address*/);
+// get token accounts
+final List<TokenAccountData> accounts = await sdk.getTokenAccounts(/*String address*/);
+// get nfts
+final NFTScanGetTransactionResponse response = await sdk.getNFTs(/*String address*/);
+final List<NFTTransactionRecord>? nfts = response.data?.records;
+```
+
+- Transfer
+
+```dart
+final tx =
+        await sdk.transfer(/*Wallet source*/, /*String destinationAddress*/, /*int amount*/);
+// or
+final tx =
+        await sdk.transferLamports(/*String receiver*/, lamports: /*int amount*/);
+```
+
+- SWAP
+
+```dart
+// 1. get routes by https://quote-api.jup.ag/v1/quote
+final routes =
+        await sdk.getSwapQuote(/*String inputAddress*/, /*String outputAddress*/, /*int amount*/);
+// 2. get transactions by your chosen route by https://quote-api.jup.ag/v1/swap
+final transactions =
+        await sdk.getSwapTxs(wallet.address, routes!.first!);
+// 3. do swap!
+await sdk.swap(wallet, transactions);
+```
+
+- Cross Chain
+
+```dart
+// 1. get cross-chain transaction by https://wormhole.canoe.finance [https://github.com/Canoe-Finance/wormhole-node]
+final transactionTx = await sdk.cross(wallet,
+          mint: /*String mintAddress*/, targetAddress: /*String ethAddress*/, amount: /*int amount*/);
+// 2. Redeem at https://www.portalbridge.com/#/redeem with returned transaction id before
+```
+
 ## NFT Dating APP
 
 ### Chat
