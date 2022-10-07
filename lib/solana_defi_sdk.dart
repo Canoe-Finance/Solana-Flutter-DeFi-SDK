@@ -131,6 +131,10 @@ class SolanaDeFiSDK {
     return instance;
   }
 
+  /// Given an address, return the symbol of the mint that minted that address.
+  ///
+  /// Args:
+  ///   address (String): The address of the mint contract.
   Future<String?> getSymbolOfMint(String address) async {
     final symbol = TokenSymbols.getSymbol(address);
     if (symbol != null) return symbol;
@@ -145,12 +149,21 @@ class SolanaDeFiSDK {
     return null;
   }
 
+  /// It returns the mint object for the given address.
+  ///
+  /// Args:
+  ///   address (String): The address of the mint you want to get.
   Future<Mint> getMint(String address) async {
     logger.info('[$_env] get mint for $address');
     return await client.getMint(
         address: Ed25519HDPublicKey.fromBase58(address));
   }
 
+  /// > Get the number of lamports available for transfer from the given address
+  ///
+  /// Args:
+  ///   address (String): The address of the account you want to check the balance
+  /// of.
   Future<int> getAvailableTransferLamports(String address) async {
     final fee = await getFee();
     final balance = await getBalance(address);
@@ -159,6 +172,11 @@ class SolanaDeFiSDK {
   }
 
   /// parse ui amount to decimals
+  /// It takes a string and returns an integer.
+  ///
+  /// Args:
+  ///   mintAddress (String): The address of the mint contract.
+  ///   uiAmount (String): The amount of tokens you want to mint.
   Future<int> parseUIAmount(String mintAddress, String uiAmount) async {
     final mint = await getMint(mintAddress);
     return (num.parse(uiAmount) * pow(10, mint.decimals)).toInt();
@@ -169,12 +187,21 @@ class SolanaDeFiSDK {
     return fees.feeCalculator.lamportsPerSignature;
   }
 
+  /// It returns the balance of the address.
+  ///
+  /// Args:
+  ///   address (String): The address of the account you want to get the balance of.
   Future<int> getBalance(String address) async {
     logger.info('[$_env](getBalance) $address');
     return await client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
   }
 
+  /// It returns a list of TokenAccountData objects.
+  ///
+  /// Args:
+  ///   address (String): The address of the account you want to get the token
+  /// accounts for.
   Future<List<TokenAccountData>> getTokenAccounts(String address) async {
     final accounts = await client.rpcClient.getTokenAccountsByOwner(
       address,
@@ -207,6 +234,10 @@ class SolanaDeFiSDK {
   }
 
   /// get usdt for mainnet only
+  /// It gets the USDT token account data for the given address.
+  ///
+  /// Args:
+  ///   address (String): The address of the account to query
   Future<TokenAccountData> getUSDTTokenAccount(String address) async {
     final response = await client.rpcClient.getTokenAccountsByOwner(
       address,
