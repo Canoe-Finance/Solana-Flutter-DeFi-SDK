@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  solana: ^0.26.0
+  solana: ^0.26.1
   retrofit: '>=3.0.0 <4.0.0'
   flutter_secure_storage: ^6.0.0
   simple_logger: ^1.9.0+1

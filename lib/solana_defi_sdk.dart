@@ -428,6 +428,14 @@ class SolanaDeFiSDK {
     return response;
   }
 
+  /// It swaps the tokens from one currency to another.
+  ///
+  /// TODO: 0.26.1 using SignedTx.decode(transaction).message;
+  ///
+  /// Args:
+  ///   wallet (Wallet): The wallet you want to swap from.
+  ///   transactions (JupSwapTransactions): The transaction object that contains the
+  /// details of the swap.
   Future<void> swap(Wallet wallet, JupSwapTransactions transactions) async {
     final txs = [
       transactions.setupTransaction,
@@ -462,6 +470,7 @@ class SolanaDeFiSDK {
   }
 
   /// cross chain by wormhole api from an api created by canoe.fiance,
+  ///
   /// Redeem by returned TransactionId at https://www.portalbridge.com/#/redeem
   Future<TransactionId> cross(
     Wallet wallet, {
@@ -483,9 +492,9 @@ class SolanaDeFiSDK {
     /*
     final signaturesCount = CompactU16.raw(data.toList()).value;
     logger.info('signaturesCount is $signaturesCount');*/
-    final message = Message.decompile(
-      CompiledMessage.fromSignedTransaction(data),
-    );
+    // TODO v0.26.1: SignedTx.decode(transaction).message;
+    final message =
+        Message.decompile(CompiledMessage.fromSignedTransaction(data));
     /*
     // other way
     final recent = await client.rpcClient.getRecentBlockhash();
