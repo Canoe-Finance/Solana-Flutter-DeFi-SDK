@@ -1,6 +1,7 @@
 # Solana-Flutter-DeFi-SDK
-
+Flutter’s SDK is the leading technology behind many social mobile Apps. It will enrich the ecosystem of Canoe SDK, and make mobile Apps abundant.
 ![image](https://user-images.githubusercontent.com/13432688/188311135-13376bba-bceb-489c-8c5c-f4bec1055365.png)
+Canoe's first social App, Dating APP, powered by open-source DeFi SDK for developers. Flutter is a fast mobile App development language and its feature is similar to web3js. Most of the blockchain relies upon JS, so the flutter framework and Dart language are easy to call on the blockchain API compared with other mobile App languages. Mobile teams can quickly integrate Flutter like StepN, which uses the Flutter framework too. Each public chain must provide the Flutter open source infra tools and Canoe will deliver more features to more public chains.
 
 ## Solana Wallet
 
