@@ -216,7 +216,6 @@ class SolanaDeFiSDK {
           num.parse(parsed.info.tokenAmount.amount) >
               0; // && parsed.info.tokenAmount.amount;
     });
-    // logger.i(filtered.length);
     for (final element in filtered) {
       final data = element.account.data as ParsedAccountData;
       final programData = data as ParsedSplTokenProgramAccountData;
@@ -430,7 +429,7 @@ class SolanaDeFiSDK {
 
   /// It swaps the tokens from one currency to another.
   ///
-  /// TODO: 0.26.1 using SignedTx.decode(transaction).message;
+  /// Solana v0.26.1: use SignedTx.decode(transaction).message instead of CompiledMessage.fromSignedTransaction;
   ///
   /// Args:
   ///   wallet (Wallet): The wallet you want to swap from.
@@ -443,13 +442,15 @@ class SolanaDeFiSDK {
       transactions.cleanupTransaction
     ]
         .whereNotNull()
-        .map(base64Decode)
+        // .map(base64Decode) // CompiledMessage.fromSignedTransaction(ByteArray(base64Decode(tx))))
         // { 01 + empty 64 byte signature (64 bytes of 00) + unsigned transaction }
         // .map((t) => t.sublist(65)) // if not using CompiledMessage.fromSignedTransaction
         .toList();
     for (var tx in txs) {
+      /*
       final message = Message.decompile(
-          CompiledMessage.fromSignedTransaction(ByteArray(tx)));
+          CompiledMessage.fromSignedTransaction(ByteArray(tx)));*/
+      final message = SignedTx.decode(tx).message;
       /*
       final recent = await client.rpcClient.getRecentBlockhash();
       final signed = await wallet.signMessage(
@@ -488,13 +489,15 @@ class SolanaDeFiSDK {
     logger.info('[$_env] cross by ${dto.toJson()}');
 
     final transaction = await api.wormhole(dto);
-    final data = ByteArray(base64Decode(transaction));
     /*
     final signaturesCount = CompactU16.raw(data.toList()).value;
     logger.info('signaturesCount is $signaturesCount');*/
-    // TODO v0.26.1: SignedTx.decode(transaction).message;
-    final message =
-        Message.decompile(CompiledMessage.fromSignedTransaction(data));
+
+    final message = SignedTx.decode(transaction).message;
+    /*
+    final data = ByteArray(base64Decode(transaction));
+    final message = Message.decompile(CompiledMessage.fromSignedTransaction(data));*/
+
     /*
     // other way
     final recent = await client.rpcClient.getRecentBlockhash();
@@ -502,6 +505,7 @@ class SolanaDeFiSDK {
         message: message, recentBlockhash: recent.blockhash);
     final transactionId =
         await client.rpcClient.sendTransaction(signed.encode());*/
+
     final transactionId = await client.sendAndConfirmTransaction(
       message: message,
       signers: [wallet, messageKey],
