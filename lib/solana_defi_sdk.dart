@@ -40,6 +40,7 @@ class TokenSymbols {
 
 enum SolanaID { mainnet, devnet, testnet }
 
+/// Using [https://pub.dev/packages/flutter_secure_storage] store / restore mnemonic
 class KeyManager {
   static const _storeKey = 'mnemonic';
 
@@ -195,6 +196,30 @@ class SolanaDeFiSDK {
     logger.info('[$_env](getBalance) $address');
     return await client.rpcClient
         .getBalance(address, commitment: Commitment.confirmed);
+  }
+
+  /// It returns a map of mint and TokenAmount pairs of the crypto currency your want (usdt, usdc).
+  ///
+  /// Args:
+  ///   address (String): the address of the account
+  ///   mints (List<String>): the address list of the mints you want to check
+  Future<Map<String, TokenAmount>> getTokenAmounts(String address,
+      {List<String> mints = const ['USDT', 'USDC']}) async {
+    Map<String, TokenAmount> tokens = {};
+    for (var mint in mints) {
+      try {
+        logger.info(
+            '[$_env] get token amount by $address / ${TokenSymbols.getSymbol(mint) ?? mint}');
+        final token = await client.getTokenBalance(
+            owner: Ed25519HDPublicKey.fromBase58(address),
+            mint: Ed25519HDPublicKey.fromBase58(
+                TokenSymbols.getAddress(mint) ?? mint));
+        logger.info(
+            '[$_env] $address / ${TokenSymbols.getSymbol(mint) ?? mint} / ${token.toJson()}');
+        tokens[mint] = token;
+      } catch (_) {}
+    }
+    return tokens;
   }
 
   /// It returns a list of TokenAccountData objects.
