@@ -472,10 +472,9 @@ class SolanaDeFiSDK {
         // .map((t) => t.sublist(65)) // if not using CompiledMessage.fromSignedTransaction
         .toList();
     for (var tx in txs) {
-      /*
       final message = Message.decompile(
-          CompiledMessage.fromSignedTransaction(ByteArray(tx)));*/
-      final message = SignedTx.decode(tx).message;
+          CompiledMessage.fromSignedTransaction(ByteArray(base64Decode(tx))));
+      // final message = SignedTx.decode(tx).message;
       /*
       final recent = await client.rpcClient.getRecentBlockhash();
       final signed = await wallet.signMessage(
@@ -518,10 +517,10 @@ class SolanaDeFiSDK {
     final signaturesCount = CompactU16.raw(data.toList()).value;
     logger.info('signaturesCount is $signaturesCount');*/
 
-    final message = SignedTx.decode(transaction).message;
-    /*
+    // final message = SignedTx.decode(transaction).message;
     final data = ByteArray(base64Decode(transaction));
-    final message = Message.decompile(CompiledMessage.fromSignedTransaction(data));*/
+    final message =
+        Message.decompile(CompiledMessage.fromSignedTransaction(data));
 
     /*
     // other way
