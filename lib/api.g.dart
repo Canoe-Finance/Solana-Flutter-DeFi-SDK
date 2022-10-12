@@ -23,6 +23,48 @@ Map<String, dynamic> _$WormHoleDTOToJson(WormHoleDTO instance) =>
       'amount': instance.amount,
     };
 
+SolScanTokenAccount _$SolScanTokenAccountFromJson(Map<String, dynamic> json) =>
+    SolScanTokenAccount(
+      tokenAddress: json['tokenAddress'] as String?,
+      tokenAccount: json['tokenAccount'] as String?,
+      tokenName: json['tokenName'] as String?,
+      tokenIcon: json['tokenIcon'] as String?,
+      rentEpoch: json['rentEpoch'] as int?,
+      lamports: json['lamports'] as int?,
+      tokenAmount: json['tokenAmount'] == null
+          ? null
+          : SolScanTokenAmount.fromJson(
+              json['tokenAmount'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$SolScanTokenAccountToJson(
+        SolScanTokenAccount instance) =>
+    <String, dynamic>{
+      'tokenAddress': instance.tokenAddress,
+      'tokenAccount': instance.tokenAccount,
+      'tokenName': instance.tokenName,
+      'tokenIcon': instance.tokenIcon,
+      'rentEpoch': instance.rentEpoch,
+      'lamports': instance.lamports,
+      'tokenAmount': instance.tokenAmount,
+    };
+
+SolScanTokenAmount _$SolScanTokenAmountFromJson(Map<String, dynamic> json) =>
+    SolScanTokenAmount(
+      amount: json['amount'] as String?,
+      uiAmountString: json['uiAmountString'] as String?,
+      decimals: json['decimals'] as int?,
+      uiAmount: json['uiAmount'] as num?,
+    );
+
+Map<String, dynamic> _$SolScanTokenAmountToJson(SolScanTokenAmount instance) =>
+    <String, dynamic>{
+      'amount': instance.amount,
+      'uiAmountString': instance.uiAmountString,
+      'decimals': instance.decimals,
+      'uiAmount': instance.uiAmount,
+    };
+
 SwapDTO _$SwapDTOFromJson(Map<String, dynamic> json) => SwapDTO(
       route: JupRoute.fromJson(json['route'] as Map<String, dynamic>),
       userPublicKey: json['userPublicKey'] as String,
@@ -192,22 +234,46 @@ Map<String, dynamic> _$JupGetPriceDataToJson(JupGetPriceData instance) =>
       'price': instance.price,
     };
 
-NFTScanGetTransactionResponse _$NFTScanGetTransactionResponseFromJson(
-        Map<String, dynamic> json) =>
-    NFTScanGetTransactionResponse(
+NFTScanResponse<T> _$NFTScanResponseFromJson<T>(
+  Map<String, dynamic> json,
+  T Function(Object? json) fromJsonT,
+) =>
+    NFTScanResponse<T>(
       msg: json['msg'] as String?,
       code: json['code'] as int?,
-      data: json['data'] == null
-          ? null
-          : NFTTransactionsData.fromJson(json['data'] as Map<String, dynamic>),
+      data: _$nullableGenericFromJson(json['data'], fromJsonT),
     );
 
-Map<String, dynamic> _$NFTScanGetTransactionResponseToJson(
-        NFTScanGetTransactionResponse instance) =>
+Map<String, dynamic> _$NFTScanResponseToJson<T>(
+  NFTScanResponse<T> instance,
+  Object? Function(T value) toJsonT,
+) =>
     <String, dynamic>{
       'msg': instance.msg,
       'code': instance.code,
-      'data': instance.data,
+      'data': _$nullableGenericToJson(instance.data, toJsonT),
+    };
+
+GetAllAssetsDataElement _$GetAllAssetsDataElementFromJson(
+        Map<String, dynamic> json) =>
+    GetAllAssetsDataElement(
+      ownsTotal: json['owns_total'] as int?,
+      logoUrl: json['logo_url'] as String?,
+      itemsTotal: json['items_total'] as int?,
+      description: json['description'] as int?,
+      collection: json['collection'] as int?,
+      assets: json['assets'] as List<dynamic>?,
+    );
+
+Map<String, dynamic> _$GetAllAssetsDataElementToJson(
+        GetAllAssetsDataElement instance) =>
+    <String, dynamic>{
+      'owns_total': instance.ownsTotal,
+      'logo_url': instance.logoUrl,
+      'items_total': instance.itemsTotal,
+      'description': instance.description,
+      'collection': instance.collection,
+      'assets': instance.assets,
     };
 
 NFTTransactionsData _$NFTTransactionsDataFromJson(Map<String, dynamic> json) =>
@@ -290,7 +356,33 @@ class _ApiClient implements ApiClient {
   String? baseUrl;
 
   @override
-  Future<NFTScanGetTransactionResponse> getTransactionByUserAddress({
+  Future<List<SolScanTokenAccount>> getTokenAccounts({required account}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'account': account};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio
+        .fetch<List<dynamic>>(_setStreamType<List<SolScanTokenAccount>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'https://public-api.solscan.io/account/tokens',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    var value = _result.data!
+        .map((dynamic i) =>
+            SolScanTokenAccount.fromJson(i as Map<String, dynamic>))
+        .toList();
+    return value;
+  }
+
+  @override
+  Future<NFTScanResponse<NFTTransactionsData>> getTransactionByUserAddress({
     required userAddress,
     collection = '',
     transferType = 'all',
@@ -309,7 +401,7 @@ class _ApiClient implements ApiClient {
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<NFTScanGetTransactionResponse>(Options(
+        _setStreamType<NFTScanResponse<NFTTransactionsData>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -321,7 +413,44 @@ class _ApiClient implements ApiClient {
               data: _data,
             )
             .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = NFTScanGetTransactionResponse.fromJson(_result.data!);
+    final value = NFTScanResponse<NFTTransactionsData>.fromJson(
+      _result.data!,
+      (json) => NFTTransactionsData.fromJson(json as Map<String, dynamic>),
+    );
+    return value;
+  }
+
+  @override
+  Future<NFTScanResponse<List<GetAllAssetsDataElement>>>
+      getAllAssetsGroupByCollection({
+    required accountAddress,
+    required apiKey,
+  }) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'X-API-KEY': apiKey};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<NFTScanResponse<List<GetAllAssetsDataElement>>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'https://solanaapi.nftscan.com/api/sol/account/own/all/${accountAddress}',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = NFTScanResponse<List<GetAllAssetsDataElement>>.fromJson(
+      _result.data!,
+      (json) => (json as List<dynamic>)
+          .map<GetAllAssetsDataElement>((i) =>
+              GetAllAssetsDataElement.fromJson(i as Map<String, dynamic>))
+          .toList(),
+    );
     return value;
   }
 

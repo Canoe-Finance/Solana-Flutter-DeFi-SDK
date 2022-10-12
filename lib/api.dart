@@ -8,16 +8,42 @@ part 'api.g.dart';
 abstract class ApiClient {
   factory ApiClient(Dio dio) = _ApiClient;
 
+  // - SolScan Public API -
+
+  @GET('https://public-api.solscan.io/account/tokens')
+  Future<List<SolScanTokenAccount>> getTokenAccounts({
+    @Query('account') required String account,
+  });
+
   // - NFTScan -
 
-  /// get multi nfts by user address
+  /// [deprecated] get multi nfts by user address
+  @Deprecated('Use `getAllAssetsGroupByCollection` instead')
   @GET('https://solana.nftscan.com/nftscan/getTransactionByUserAddress')
-  Future<NFTScanGetTransactionResponse> getTransactionByUserAddress({
+  Future<NFTScanResponse<NFTTransactionsData>> getTransactionByUserAddress({
     @Query('user_address') required String userAddress,
     @Query('collection') String? collection = '',
     @Query('transferType') String? transferType = 'all',
     @Query('pageIndex') int? pageIndex = 0,
     @Query('pageSize') int? pageSize = 20,
+  });
+
+  /// Retrieve all assets owned by an account group by collection
+  ///
+  /// This endpoint returns all NFTs owned by an account address. And the NFTs are grouped according to collection.
+  /// https://docs.nftscan.com/solana/getAccountNftAssetsGroupByCollectionUsingGET
+  @GET(
+      'https://solanaapi.nftscan.com/api/sol/account/own/all/{account_address}')
+  Future<NFTScanResponse<List<GetAllAssetsDataElement>>>
+      getAllAssetsGroupByCollection({
+    /// The address of the owner of the assets
+    @Path('account_address') required String accountAddress,
+
+    /// Authentication required for this api
+    ///
+    /// You may get the apiKey from https://developer.nftscan.com/
+    /// Overview: https://docs.nftscan.com/solana/API%20Overview
+    @Header("X-API-KEY") required String apiKey,
   });
 
   // - jupiter API -
@@ -87,6 +113,45 @@ class WormHoleDTO {
   factory WormHoleDTO.fromJson(Map<String, dynamic> json) =>
       _$WormHoleDTOFromJson(json);
   Map<String, dynamic> toJson() => _$WormHoleDTOToJson(this);
+}
+
+@JsonSerializable()
+class SolScanTokenAccount {
+  final String? tokenAddress;
+  final String? tokenAccount;
+  final String? tokenName;
+  final String? tokenIcon;
+  final int? rentEpoch;
+  final int? lamports;
+  final SolScanTokenAmount? tokenAmount;
+
+  SolScanTokenAccount(
+      {this.tokenAddress,
+      this.tokenAccount,
+      this.tokenName,
+      this.tokenIcon,
+      this.rentEpoch,
+      this.lamports,
+      this.tokenAmount});
+
+  factory SolScanTokenAccount.fromJson(Map<String, dynamic> json) =>
+      _$SolScanTokenAccountFromJson(json);
+  Map<String, dynamic> toJson() => _$SolScanTokenAccountToJson(this);
+}
+
+@JsonSerializable()
+class SolScanTokenAmount {
+  final String? amount;
+  final String? uiAmountString;
+  final int? decimals;
+  final num? uiAmount;
+
+  SolScanTokenAmount(
+      {this.amount, this.uiAmountString, this.decimals, this.uiAmount});
+
+  factory SolScanTokenAmount.fromJson(Map<String, dynamic> json) =>
+      _$SolScanTokenAmountFromJson(json);
+  Map<String, dynamic> toJson() => _$SolScanTokenAmountToJson(this);
 }
 
 @JsonSerializable()
@@ -292,17 +357,65 @@ class JupGetPriceData {
   Map<String, dynamic> toJson() => _$JupGetPriceDataToJson(this);
 }
 
-@JsonSerializable()
-class NFTScanGetTransactionResponse {
+@JsonSerializable(genericArgumentFactories: true)
+class NFTScanResponse<T> {
+  /// Error information message while the request fails
   final String? msg;
+
+  /// Response status code (200 means the request successes, 4XX or 5XX means the request fails)
   final int? code;
-  final NFTTransactionsData? data;
 
-  NFTScanGetTransactionResponse({this.msg, this.code, this.data});
+  /// Response data
+  final T? data;
 
-  factory NFTScanGetTransactionResponse.fromJson(Map<String, dynamic> json) =>
-      _$NFTScanGetTransactionResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$NFTScanGetTransactionResponseToJson(this);
+  NFTScanResponse({this.msg, this.code, this.data});
+
+  factory NFTScanResponse.fromJson(
+    Map<String, dynamic> json,
+    T Function(Object? json) fromJsonT,
+  ) =>
+      _$NFTScanResponseFromJson(json, fromJsonT);
+  Map<String, dynamic> toJson(Object Function(T value) toJsonT) =>
+      _$NFTScanResponseToJson(this, toJsonT);
+}
+
+@JsonSerializable()
+class GetAllAssetsDataElement {
+  /// How many items the account address owns
+  @JsonKey(name: 'owns_total')
+  final int? ownsTotal;
+
+  /// The logo URL
+  @JsonKey(name: 'logo_url')
+  final String? logoUrl;
+
+  /// How many items for the collection
+  @JsonKey(name: 'items_total')
+  final int? itemsTotal;
+
+  /// The description
+  @JsonKey(name: 'description')
+  final int? description;
+
+  /// The collection
+  @JsonKey(name: 'collection')
+  final int? collection;
+
+  /// List of Asset Model
+  @JsonKey(name: 'assets')
+  final List<dynamic>? assets;
+
+  GetAllAssetsDataElement(
+      {this.ownsTotal,
+      this.logoUrl,
+      this.itemsTotal,
+      this.description,
+      this.collection,
+      this.assets});
+
+  factory GetAllAssetsDataElement.fromJson(Map<String, dynamic> json) =>
+      _$GetAllAssetsDataElementFromJson(json);
+  Map<String, dynamic> toJson() => _$GetAllAssetsDataElementToJson(this);
 }
 
 @JsonSerializable()

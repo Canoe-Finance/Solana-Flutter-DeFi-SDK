@@ -79,6 +79,7 @@ class SolanaDeFiSDK {
   SolanaClient? _client;
   SolanaClient get client => _client!;
   // JupiterAggregatorClient get jup => _jupClient;
+  String? _nftScanApiKey;
 
   static final SolanaDeFiSDK _instance = SolanaDeFiSDK._();
   static SolanaDeFiSDK get instance => _instance;
@@ -94,6 +95,7 @@ class SolanaDeFiSDK {
   static SolanaDeFiSDK initialize({
     SolanaID? env,
     SolanaClient? solanaClient,
+    String? nftScanApiKey,
     bool debug = false,
   }) {
     assert(!(env != null && solanaClient != null));
@@ -128,6 +130,7 @@ class SolanaDeFiSDK {
       }
     }
     instance._client = client;
+    instance._nftScanApiKey = nftScanApiKey;
     // logger.setLevel(loggerLevel ?? Level.WARNING);
     return instance;
   }
@@ -222,7 +225,24 @@ class SolanaDeFiSDK {
     return tokens;
   }
 
+  /// It returns a list of SolScanTokenAccount objects.
+  ///
+  /// Args:
+  ///   address (String): The address of the account you want to get the token
+  /// accounts for.
+  Future<List<SolScanTokenAccount>> getTokenAccountsBySolScan(
+      String address) async {
+    final accounts = await api.getTokenAccounts(account: address);
+    return accounts
+        .where((element) =>
+            (element.tokenAmount?.decimals ?? 0) != 0 &&
+            (element.tokenAmount?.uiAmount ?? 0) > 0)
+        .toList(growable: false);
+  }
+
   /// It returns a list of TokenAccountData objects.
+  ///
+  /// Use [getTokenAccountsBySolScan] if 429 error occurred with no reason.
   ///
   /// Args:
   ///   address (String): The address of the account you want to get the token
@@ -544,7 +564,7 @@ class SolanaDeFiSDK {
   }
 
   /// get nfts on Mainnet
-  Future<NFTScanGetTransactionResponse> getNFTs(String address,
+  Future<NFTScanResponse<NFTTransactionsData>> getNFTs(String address,
       {pageIndex = 0, pageSize = 20}) async {
     final response = await api.getTransactionByUserAddress(
         userAddress: address, pageIndex: pageIndex, pageSize: pageSize);
@@ -567,5 +587,21 @@ class SolanaDeFiSDK {
         .where((element) => element.info.tokenAmount.decimals == 0)
         .map((element) => element.info.mint);
     mints.map((mint) async {});*/
+  }
+
+  /// It gets all the NFTs of a user grouped by collection.
+  ///
+  /// Provided by https://docs.nftscan.com/solana/getAccountNftAssetsGroupByCollectionUsingGET
+  /// An api key required
+  /// Args:
+  ///   address (String): The address of the account that owns the NFTs.
+  Future<NFTScanResponse<List<GetAllAssetsDataElement>>>
+      getNFTsGroupByCollection(String address) async {
+    if (_nftScanApiKey == null) throw 'not api key found for nft scan.';
+
+    final response = await api.getAllAssetsGroupByCollection(
+        accountAddress: address, apiKey: _nftScanApiKey!);
+    logger.info('[$_env] found ${response.data?.length} nfts');
+    return response;
   }
 }
