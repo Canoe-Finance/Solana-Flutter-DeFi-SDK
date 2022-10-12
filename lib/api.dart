@@ -121,6 +121,7 @@ class SolScanTokenAccount {
   final String? tokenAccount;
   final String? tokenName;
   final String? tokenIcon;
+  final String? tokenSymbol;
   final int? rentEpoch;
   final int? lamports;
   final SolScanTokenAmount? tokenAmount;
@@ -130,6 +131,7 @@ class SolScanTokenAccount {
       this.tokenAccount,
       this.tokenName,
       this.tokenIcon,
+      this.tokenSymbol,
       this.rentEpoch,
       this.lamports,
       this.tokenAmount});
@@ -395,11 +397,11 @@ class GetAllAssetsDataElement {
 
   /// The description
   @JsonKey(name: 'description')
-  final int? description;
+  final String? description;
 
   /// The collection
   @JsonKey(name: 'collection')
-  final int? collection;
+  final String? collection;
 
   /// List of Asset Model
   @JsonKey(name: 'assets')

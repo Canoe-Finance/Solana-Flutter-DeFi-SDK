@@ -29,6 +29,7 @@ SolScanTokenAccount _$SolScanTokenAccountFromJson(Map<String, dynamic> json) =>
       tokenAccount: json['tokenAccount'] as String?,
       tokenName: json['tokenName'] as String?,
       tokenIcon: json['tokenIcon'] as String?,
+      tokenSymbol: json['tokenSymbol'] as String?,
       rentEpoch: json['rentEpoch'] as int?,
       lamports: json['lamports'] as int?,
       tokenAmount: json['tokenAmount'] == null
@@ -44,6 +45,7 @@ Map<String, dynamic> _$SolScanTokenAccountToJson(
       'tokenAccount': instance.tokenAccount,
       'tokenName': instance.tokenName,
       'tokenIcon': instance.tokenIcon,
+      'tokenSymbol': instance.tokenSymbol,
       'rentEpoch': instance.rentEpoch,
       'lamports': instance.lamports,
       'tokenAmount': instance.tokenAmount,
@@ -260,8 +262,8 @@ GetAllAssetsDataElement _$GetAllAssetsDataElementFromJson(
       ownsTotal: json['owns_total'] as int?,
       logoUrl: json['logo_url'] as String?,
       itemsTotal: json['items_total'] as int?,
-      description: json['description'] as int?,
-      collection: json['collection'] as int?,
+      description: json['description'] as String?,
+      collection: json['collection'] as String?,
       assets: (json['assets'] as List<dynamic>?)
           ?.map((e) =>
               GetAllAssetsDataElementAsset.fromJson(e as Map<String, dynamic>))
