@@ -262,7 +262,10 @@ GetAllAssetsDataElement _$GetAllAssetsDataElementFromJson(
       itemsTotal: json['items_total'] as int?,
       description: json['description'] as int?,
       collection: json['collection'] as int?,
-      assets: json['assets'] as List<dynamic>?,
+      assets: (json['assets'] as List<dynamic>?)
+          ?.map((e) =>
+              GetAllAssetsDataElementAsset.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$GetAllAssetsDataElementToJson(
@@ -274,6 +277,55 @@ Map<String, dynamic> _$GetAllAssetsDataElementToJson(
       'description': instance.description,
       'collection': instance.collection,
       'assets': instance.assets,
+    };
+
+GetAllAssetsDataElementAsset _$GetAllAssetsDataElementAssetFromJson(
+        Map<String, dynamic> json) =>
+    GetAllAssetsDataElementAsset(
+      blockNumber: json['block_number'] as int?,
+      collection: json['collection'] as String?,
+      contentType: json['content_type'] as String?,
+      contentUri: json['content_uri'] as String?,
+      externalLink: json['external_link'] as String?,
+      imageUri: json['image_uri'] as String?,
+      interactProgram: json['interact_program'] as String?,
+      latestTradePrice: json['latest_trade_price'] as num?,
+      latestTradeTimestamp: json['latest_trade_timestamp'] as int?,
+      latestTradeTransactionHash:
+          json['latest_trade_transaction_hash'] as String?,
+      metadataJson: json['metadata_json'] as String?,
+      mintPrice: json['mint_price'] as num?,
+      mintTimestamp: json['mint_timestamp'] as int?,
+      mintTransactionHash: json['mint_transaction_hash'] as String?,
+      minter: json['minter'] as String?,
+      name: json['name'] as String?,
+      owner: json['owner'] as String?,
+      tokenAddress: json['token_address'] as String?,
+      tokenUri: json['token_uri'] as String?,
+    );
+
+Map<String, dynamic> _$GetAllAssetsDataElementAssetToJson(
+        GetAllAssetsDataElementAsset instance) =>
+    <String, dynamic>{
+      'block_number': instance.blockNumber,
+      'collection': instance.collection,
+      'content_type': instance.contentType,
+      'content_uri': instance.contentUri,
+      'external_link': instance.externalLink,
+      'image_uri': instance.imageUri,
+      'interact_program': instance.interactProgram,
+      'latest_trade_price': instance.latestTradePrice,
+      'latest_trade_timestamp': instance.latestTradeTimestamp,
+      'latest_trade_transaction_hash': instance.latestTradeTransactionHash,
+      'metadata_json': instance.metadataJson,
+      'mint_price': instance.mintPrice,
+      'mint_timestamp': instance.mintTimestamp,
+      'mint_transaction_hash': instance.mintTransactionHash,
+      'minter': instance.minter,
+      'name': instance.name,
+      'owner': instance.owner,
+      'token_address': instance.tokenAddress,
+      'token_uri': instance.tokenUri,
     };
 
 NFTTransactionsData _$NFTTransactionsDataFromJson(Map<String, dynamic> json) =>

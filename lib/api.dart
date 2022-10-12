@@ -403,7 +403,7 @@ class GetAllAssetsDataElement {
 
   /// List of Asset Model
   @JsonKey(name: 'assets')
-  final List<dynamic>? assets;
+  final List<GetAllAssetsDataElementAsset>? assets;
 
   GetAllAssetsDataElement(
       {this.ownsTotal,
@@ -416,6 +416,95 @@ class GetAllAssetsDataElement {
   factory GetAllAssetsDataElement.fromJson(Map<String, dynamic> json) =>
       _$GetAllAssetsDataElementFromJson(json);
   Map<String, dynamic> toJson() => _$GetAllAssetsDataElementToJson(this);
+}
+
+@JsonSerializable()
+class GetAllAssetsDataElementAsset {
+  @JsonKey(name: 'block_number')
+  final int? blockNumber;
+  @JsonKey(name: 'collection')
+  final String? collection;
+  @JsonKey(name: 'content_type')
+  final String? contentType;
+
+  /// The content URI to display
+  @JsonKey(name: 'content_uri')
+  final String? contentUri;
+
+  /// External link to the original website
+  @JsonKey(name: 'external_link')
+  final String? externalLink;
+  @JsonKey(name: 'image_uri')
+  final String? imageUri;
+
+  /// The program interacted with when the item was minted
+  @JsonKey(name: 'interact_program')
+  final String? interactProgram;
+
+  /// The latest trade price for the item
+  @JsonKey(name: 'latest_trade_price')
+  final num? latestTradePrice;
+
+  /// The latest trade timestamp in milliseconds for the item
+  @JsonKey(name: 'latest_trade_timestamp')
+  final int? latestTradeTimestamp;
+
+  /// The latest trade transaction hash for the item
+  @JsonKey(name: 'latest_trade_transaction_hash')
+  final String? latestTradeTransactionHash;
+  @JsonKey(name: 'metadata_json')
+  final String? metadataJson;
+
+  /// The price when the item was minted
+  @JsonKey(name: 'mint_price')
+  final num? mintPrice;
+
+  /// The timestamp in milliseconds when the item was minted
+  @JsonKey(name: 'mint_timestamp')
+  final int? mintTimestamp;
+
+  /// The transaction hash when the item was minted
+  @JsonKey(name: 'mint_transaction_hash')
+  final String? mintTransactionHash;
+
+  /// The user address who minted the item
+  @JsonKey(name: 'minter')
+  final String? minter;
+  @JsonKey(name: 'name')
+  final String? name;
+
+  /// The user address who owns the item now
+  @JsonKey(name: 'owner')
+  final String? owner;
+  @JsonKey(name: 'token_address')
+  final String? tokenAddress;
+  @JsonKey(name: 'token_uri')
+  final String? tokenUri;
+
+  GetAllAssetsDataElementAsset(
+      {this.blockNumber,
+      this.collection,
+      this.contentType,
+      this.contentUri,
+      this.externalLink,
+      this.imageUri,
+      this.interactProgram,
+      this.latestTradePrice,
+      this.latestTradeTimestamp,
+      this.latestTradeTransactionHash,
+      this.metadataJson,
+      this.mintPrice,
+      this.mintTimestamp,
+      this.mintTransactionHash,
+      this.minter,
+      this.name,
+      this.owner,
+      this.tokenAddress,
+      this.tokenUri});
+
+  factory GetAllAssetsDataElementAsset.fromJson(Map<String, dynamic> json) =>
+      _$GetAllAssetsDataElementAssetFromJson(json);
+  Map<String, dynamic> toJson() => _$GetAllAssetsDataElementAssetToJson(this);
 }
 
 @JsonSerializable()
