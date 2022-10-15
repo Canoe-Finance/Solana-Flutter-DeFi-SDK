@@ -601,7 +601,7 @@ class SolanaDeFiSDK {
 
     final response = await api.getAllAssetsGroupByCollection(
         accountAddress: address, apiKey: _nftScanApiKey!);
-    logger.info('[$_env] found ${response.data?.length} nfts');
+    logger.info('[$_env] found ${response.data?.length} collections');
     return response;
   }
 }
