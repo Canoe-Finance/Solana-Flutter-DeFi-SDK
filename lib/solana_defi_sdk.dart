@@ -207,7 +207,8 @@ class SolanaDeFiSDK {
   ///   address (String): the address of the account
   ///   mints (List<String>): the address list of the mints you want to check
   Future<Map<String, TokenAmount>> getTokenAmounts(String address,
-      {List<String> mints = const ['USDT', 'USDC']}) async {
+      {List<String> mints = const ['USDT', 'USDC'],
+      bool includeZero = false}) async {
     Map<String, TokenAmount> tokens = {};
     for (var mint in mints) {
       try {
@@ -220,7 +221,10 @@ class SolanaDeFiSDK {
         logger.info(
             '[$_env] $address / ${TokenSymbols.getSymbol(mint) ?? mint} / ${token.toJson()}');
         tokens[mint] = token;
-      } catch (_) {}
+      } catch (_) {
+        tokens[mint] =
+            const TokenAmount(amount: '0', decimals: 6, uiAmountString: '0');
+      }
     }
     return tokens;
   }
