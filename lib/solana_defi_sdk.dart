@@ -601,7 +601,7 @@ class SolanaDeFiSDK {
   ///   address (String): The address of the account that owns the NFTs.
   Future<NFTScanResponse<List<GetAllAssetsDataElement>>>
       getNFTsGroupByCollection(String address) async {
-    if (_nftScanApiKey == null) throw 'not api key found for nft scan.';
+    if (_nftScanApiKey == null) throw 'no api key found for nft scan.';
 
     final response = await api.getAllAssetsGroupByCollection(
         accountAddress: address, apiKey: _nftScanApiKey!);
