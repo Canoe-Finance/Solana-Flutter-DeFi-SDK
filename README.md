@@ -1,6 +1,7 @@
 # Solana-Flutter-DeFi-SDK
-
+Flutter’s SDK is the leading technology behind many social mobile Apps. It will enrich the ecosystem of Canoe SDK, and make mobile Apps abundant.
 ![image](https://user-images.githubusercontent.com/13432688/188311135-13376bba-bceb-489c-8c5c-f4bec1055365.png)
+Canoe's first social App, Dating APP, powered by open-source DeFi SDK for developers. Flutter is a fast mobile App development language and its feature is similar to web3js. Most of the blockchain relies upon JS, so the flutter framework and Dart language are easy to call on the blockchain API compared with other mobile App languages. Mobile teams can quickly integrate Flutter like StepN, which uses the Flutter framework too. Each public chain must provide the Flutter open source infra tools and Canoe will deliver more features to more public chains.
 
 ## Solana Wallet
 
@@ -36,6 +37,7 @@ Build the wallet module on the basis of [cryptoplease-dart](https://github.com/c
 ***IMPORTANT current sdk is unstable right now, api may change in future.***
 
 - Initialize
+
 ```dart
 final sdk = SolanaDeFiSDK.initialize();
 // for devnet
@@ -43,6 +45,7 @@ final sdk = SolanaDeFiSDK.initialize(env: SolanaID.devnet);
 ```
 
 - Wallet
+
 ```dart
 // create wallet
 import 'package:bip39/bip39.dart' as bip39;
@@ -56,6 +59,7 @@ final wallet = sdk.wallet!;
 ```
 
 - Balance & NFTs
+
 ```dart
 // get sol balance
 final int balance = await sdk.getBalance(/*String address*/);
@@ -67,15 +71,17 @@ final List<NFTTransactionRecord>? nfts = response.data?.records;
 ```
 
 - Transfer
+
 ```dart
-final transactionId = 
-        await sdk.transfer(/*Wallet source*/, /*String destinationAddress*/, /*int amonut*/);
+final tx =
+        await sdk.transfer(/*Wallet source*/, /*String destinationAddress*/, /*int amount*/);
 // or
-final transactionId =
+final tx =
         await sdk.transferLamports(/*String receiver*/, lamports: /*int amount*/);
 ```
 
 - SWAP
+
 ```dart
 // 1. get routes by https://quote-api.jup.ag/v1/quote
 final routes =
@@ -88,9 +94,10 @@ await sdk.swap(wallet, transactions);
 ```
 
 - Cross Chain
+
 ```dart
-// 1. get cross chain transaction id by wormhole api from an api created by canoe.fiance
-final transactionId = await sdk.cross(wallet,
+// 1. get cross-chain transaction by https://wormhole.canoe.finance [https://github.com/Canoe-Finance/wormhole-node]
+final transactionTx = await sdk.cross(wallet,
           mint: /*String mintAddress*/, targetAddress: /*String ethAddress*/, amount: /*int amount*/);
 // 2. Redeem at https://www.portalbridge.com/#/redeem with returned transaction id before
 ```

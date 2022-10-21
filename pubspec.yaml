@@ -12,14 +12,14 @@ dependencies:
     sdk: flutter
   solana: ^0.26.1
   retrofit: '>=3.0.0 <4.0.0'
-  flutter_secure_storage: ^6.0.0
-  simple_logger: ^1.9.0+1
-  json_annotation: ">=4.7.0"
+  flutter_secure_storage: '>=6.0.0'
+  simple_logger: '>=1.9.0'
+  json_annotation: '>=4.7.0'
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+#  flutter_lints: ^2.0.0
   retrofit_generator: '>=4.0.0 <5.0.0'
   build_runner: '>2.0.0 <4.0.0'
   json_serializable: '>4.4.0'
