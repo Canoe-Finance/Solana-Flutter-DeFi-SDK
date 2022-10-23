@@ -357,11 +357,6 @@ class SolanaDeFiSDK {
     return base58encode(key);
   }
 
-  /// just check the string includes 12 words
-  static bool isValidMnemonic(String mnemonic, {int length = 12}) {
-    return RegExp(r'[a-z]+').allMatches(mnemonic).length == length;
-  }
-
   static String generateMnemonic() {
     return bip39.generateMnemonic();
   }
@@ -388,6 +383,8 @@ class SolanaDeFiSDK {
   /// shouldHasAccountInfo - throw error if set to true and no account info found by solana getAccountInfo api
   Future<Wallet> initWalletFromMnemonic(String mnemonic,
       {bool shouldHasAccountInfo = false}) async {
+    if (!bip39.validateMnemonic(mnemonic)) throw 'invalid mnemonic';
+
     final Ed25519HDKeyPair keyPair =
         await Ed25519HDKeyPair.fromMnemonic(mnemonic);
     final Wallet wallet = keyPair;
